@@ -11,6 +11,7 @@ import {
   getGrandTotal,
   cartToCheckoutItems,
 } from '../utils/cartState.js';
+import { trackMetaEvent, metaParamsFromOffer, metaParamsFromItems } from '../utils/metaPixel.js';
 
 export default function OffersSection({ intro, offers, onCheckout }) {
   const [cart, setCart] = useState({});
@@ -25,6 +26,8 @@ export default function OffersSection({ intro, offers, onCheckout }) {
 
   const addOfferToCart = (offerId) => {
     preloadCheckout();
+    const offer = offers.find((o) => o.id === offerId);
+    if (offer) trackMetaEvent('AddToCart', metaParamsFromOffer(offer, 1));
     setCart((c) => incrementCartItem(c, offerId));
   };
 
@@ -35,6 +38,7 @@ export default function OffersSection({ intro, offers, onCheckout }) {
   const handleCheckout = () => {
     const items = cartToCheckoutItems(cart, offers);
     if (items.length === 0) return;
+    trackMetaEvent('InitiateCheckout', metaParamsFromItems(items, grandTotal));
     onCheckout(items);
   };
 

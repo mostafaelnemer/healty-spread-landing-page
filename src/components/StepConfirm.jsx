@@ -3,6 +3,7 @@ import { egyptGovs, formatPrice, SHIPPING_FEE, spreadFlavors } from '../data/lan
 import { emptyFlavors } from './FlavorPicker.jsx';
 import CartFlavors from './CartFlavors.jsx';
 import OfferImage from './OfferImage.jsx';
+import { trackMetaEvent, metaParamsFromItems } from '../utils/metaPixel.js';
 
 const ORDER_API_URL = 'https://script.google.com/macros/s/AKfycbxu-KuCVRImaq3aReqoqnpUxUnMEuQkIG4R9_ns4V3I4Kigg-xOLN37JfOq_5xefP0W/exec';
 
@@ -117,6 +118,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       body: payload,
     }).catch(() => {});
 
+    trackMetaEvent('Purchase', metaParamsFromItems(items, grandTotal));
     onSuccess();
   };
 
