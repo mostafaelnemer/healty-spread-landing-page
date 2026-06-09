@@ -1,0 +1,1 @@
+var e=`/assets/3ard2-B8hO2Vex.webp`;export{e as default};
