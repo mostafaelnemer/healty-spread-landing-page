@@ -28,6 +28,9 @@ function flavorsComplete(items, itemFlavors) {
 
 export default function StepConfirm({ form, cartItems: initialItems, onBack, onSuccess }) {
   const titleRef = useRef(null);
+  // Guard: prevents Purchase event from firing more than once per mount,
+  // even if the button is tapped rapidly before the disabled state renders.
+  const purchaseFiredRef = useRef(false);
   const [items, setItems] = useState(initialItems);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -97,6 +100,11 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       document.getElementById(`field-${firstError}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
+
+    // Synchronous guard — useRef ensures this check is reliable
+    // regardless of React's state batching or rapid double-taps.
+    if (purchaseFiredRef.current) return;
+    purchaseFiredRef.current = true;
 
     setSubmitState('sending');
 
