@@ -78,37 +78,37 @@ export const landingData = {
   offersIntro: {
     eyebrow: 'اختار العرض المناسب ليك 👇',
     title: 'عروض Healthy Spread قبل ما تخلص',
-    description: 'كل العروض شاملة الدفع عند الاستلام 💳 + رسوم شحن 49 جنيه',
+    description: 'كل العروض شاملة الدفع عند الاستلام 💳 + التوصيل مجاناً 🚚',
   },
   offers: [
     {
       id: 'two-jars',
       title: 'العرض الأول',
       amount: '2 Healthy Spread',
-      description: '2 هيلثي سبريد + Healthy Spread Tube مجانًا',
-      price: 499,
+      description: 'اشتري ٢ شيكولاتة سبريد بسعر مخفوض',
+      price: 450,
       originalPrice: 600,
-      saving: 101,
+      saving: 150,
       unitsPerPack: 2,
-      giftUnits: 1,
+      giftUnits: 0,
       maxFlavors: 2,
-      maxGiftFlavors: 1,
-      badge: 'أفضل توفير 🔥',
+      maxGiftFlavors: 0,
+      badge: 'توفير 🔥',
       accent: '#5f2d91',
       note: '',
     },
     {
-      id: 'four-jars',
+      id: 'three-jars',
       title: 'العرض الثاني',
-      amount: '4 Healthy Spread',
-      description: '4 هيلثي سبريد + 2 Healthy Spread Tube مجانًا',
-      price: 950,
+      amount: '3 Healthy Spread + 1 مجاناً',
+      description: 'اشتري ٣ شيكولاتة سبريد واحصل على قطعة مجاناً',
+      price: 900,
       originalPrice: 1200,
-      saving: 250,
-      unitsPerPack: 4,
-      giftUnits: 2,
-      maxFlavors: 5,
-      maxGiftFlavors: 2,
+      saving: 300,
+      unitsPerPack: 3,
+      giftUnits: 1,
+      maxFlavors: 4,
+      maxGiftFlavors: 1,
       badge: '⭐ الأكثر طلبًا',
       accent: '#b11730',
       note: '',
@@ -136,6 +136,6 @@ export const landingData = {
   },
 };
 
-export const SHIPPING_FEE = 49; // flat per order, never multiplied
+export const SHIPPING_FEE = 0; // free shipping
 
 export const formatPrice = (amount) => `${amount} جنيه`;

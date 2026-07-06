@@ -117,7 +117,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       bundle: buildOfferSummary(),
       flavors: buildFlavorSummary(),
       quantity: String(items.reduce((s, item) => s + item.qty, 0)),
-      price: `${grandTotal} جنيه (منتجات: ${totalPrice} + شحن: ${SHIPPING_FEE})`,
+      price: `${grandTotal} جنيه (منتجات: ${totalPrice} + شحن: مجاناً)`,
     });
 
     fetch(ORDER_API_URL, {
@@ -190,7 +190,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
           </div>
           <div className="cart-total-row">
             <span>🚚 الشحن</span>
-            <span>{formatPrice(SHIPPING_FEE)}</span>
+            <span>مجاناً</span>
           </div>
           <div className="cart-total-row cart-total-grand">
             <span>الإجمالي</span>

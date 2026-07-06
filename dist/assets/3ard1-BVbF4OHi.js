@@ -1,1 +1,0 @@
-var e=`/assets/3ard1-CKw-gKrF.webp`;export{e as default};

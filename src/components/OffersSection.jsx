@@ -56,7 +56,7 @@ export default function OffersSection({ intro, offers, onCheckout }) {
             </span>
             <span className="offer-sticky-price">{formatPrice(grandTotal)}</span>
             <span className="offer-sticky-shipping">
-              منتجات {formatPrice(subtotal)} + شحن {formatPrice(SHIPPING_FEE)}
+              منتجات {formatPrice(subtotal)} + شحن مجاناً 🚚
             </span>
           </div>
           <button
@@ -117,7 +117,7 @@ export default function OffersSection({ intro, offers, onCheckout }) {
                     <s>{formatPrice(offer.originalPrice * displayQty)}</s>
                     <span className="saving-tag">وفر {formatPrice(offer.saving * displayQty)}</span>
                   </div>
-                  <p className="bundle-row-shipping">🚚 + {formatPrice(SHIPPING_FEE)} شحن</p>
+                  <p className="bundle-row-shipping">🚚 توصيل مجاناً</p>
 
                   {inCart ? (
                     <div
@@ -158,7 +158,7 @@ export default function OffersSection({ intro, offers, onCheckout }) {
         </div>
 
         <div className="trust-pills">
-          <span>📦 شحن {formatPrice(SHIPPING_FEE)} ثابت</span>
+          <span>🚚 توصيل مجاناً</span>
           <span>💳 الدفع عند الاستلام</span>
           <span>🌿 بدون سكر مضاف</span>
         </div>
@@ -172,7 +172,7 @@ export default function OffersSection({ intro, offers, onCheckout }) {
               </div>
               <div className="checkout-summary-row">
                 <span>🚚 الشحن</span>
-                <span>{formatPrice(SHIPPING_FEE)}</span>
+                <span>مجاناً</span>
               </div>
               <div className="checkout-summary-row checkout-summary-total">
                 <span>الإجمالي</span>

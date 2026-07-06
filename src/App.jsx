@@ -31,7 +31,7 @@ function Header({ brand, nav }) {
   return (
     <>
       <div className="promo-bar">
-        <span>📦 شحن 49 جنيه ثابت</span>
+        <span>🚚 توصيل مجاناً</span>
         <span>•</span>
         <span>Healthy Spread بدون سكر مضاف</span>
         <span>•</span>
