@@ -103,7 +103,7 @@ export const landingData = {
       price: 900,
       originalPrice: 1200,
       saving: 300,
-      unitsPerPack: 3,
+      unitsPerPack: 4,
       maxFlavors: 4,
       badge: '⭐ الأكثر طلبًا',
       accent: '#b11730',
