@@ -85,7 +85,7 @@ export const landingData = {
       id: 'two-jars',
       title: 'العرض الأول',
       amount: '2 Healthy Spread',
-      description: 'اشتري ٢ شيكولاتة سبريد بسعر مخفوض',
+      description: 'اشتري ٢ شيكولاتة سبريد بسعر مخفض',
       price: 450,
       originalPrice: 600,
       saving: 150,

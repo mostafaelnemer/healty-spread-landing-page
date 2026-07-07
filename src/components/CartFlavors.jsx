@@ -28,11 +28,6 @@ export default function CartFlavors({ items, itemFlavors, onItemFlavorsChange })
               onItemFlavorsChange((prev) => prev.map((x, idx) => (idx === i ? { ...f } : x)))
             }
           />
-          {item.offer.giftUnits > 0 && (
-            <p className="fp-gift-note">
-              🎁 {item.offer.giftUnits} تيوب مجانًا 
-            </p>
-          )}
         </div>
       ))}
     </div>
