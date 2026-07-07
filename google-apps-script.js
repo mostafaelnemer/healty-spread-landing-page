@@ -26,8 +26,10 @@ function handleRequest(e) {
   try {
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 
-    // headers في أول صف دايماً
-    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+    // headers في أول صف بس لو الشيت فاضي
+    if (sheet.getLastRow() === 0) {
+      sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+    }
 
     var now  = new Date();
     var date = now.toLocaleDateString('ar-EG');   // مثال: 25/5/2026

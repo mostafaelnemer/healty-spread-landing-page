@@ -5,7 +5,7 @@ import CartFlavors from './CartFlavors.jsx';
 import OfferImage from './OfferImage.jsx';
 import { trackMetaEvent, metaParamsFromItems } from '../utils/metaPixel.js';
 
-const ORDER_API_URL = 'https://script.google.com/macros/s/AKfycbxu-KuCVRImaq3aReqoqnpUxUnMEuQkIG4R9_ns4V3I4Kigg-xOLN37JfOq_5xefP0W/exec';
+const ORDER_API_URL = 'https://script.google.com/macros/s/AKfycbwmXVWyY-RERao_o-TkGbC2vbziqU1DWAckfYUjySLLDHG8m1lO8h7pDZIlOut1lTBy/exec';
 
 function initialItemFlavors(items) {
   return items.map(() => ({ ...emptyFlavors() }));
@@ -108,7 +108,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
 
     setSubmitState('sending');
 
-    const payload = new URLSearchParams({
+    const params = new URLSearchParams({
       name,
       phone,
       gov,
@@ -120,10 +120,11 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       price: `${grandTotal} جنيه (منتجات: ${totalPrice} + شحن: مجاناً)`,
     });
 
-    fetch(ORDER_API_URL, {
-      method: 'POST',
+    // GET + no-cors is the only reliable fire-and-forget method for
+    // Apps Script web apps when CORS headers are not set on the script side.
+    fetch(`${ORDER_API_URL}?${params.toString()}`, {
+      method: 'GET',
       mode: 'no-cors',
-      body: payload,
     }).catch(() => {});
 
     trackMetaEvent('Purchase', metaParamsFromItems(items, grandTotal));
