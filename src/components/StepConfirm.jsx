@@ -5,7 +5,7 @@ import CartFlavors from './CartFlavors.jsx';
 import OfferImage from './OfferImage.jsx';
 import { trackMetaEvent, metaParamsFromItems } from '../utils/metaPixel.js';
 
-const ORDER_API_URL = 'https://script.google.com/macros/s/AKfycbwmXVWyY-RERao_o-TkGbC2vbziqU1DWAckfYUjySLLDHG8m1lO8h7pDZIlOut1lTBy/exec';
+const ORDER_API_URL = 'https://script.google.com/macros/s/AKfycbwmCSkvnrX6Ow09kNwJXJoQvRSD-WPQvENWjsGIjSwiSewN40EjbxDmPT6P1A8kRPQl/exec';
 
 function initialItemFlavors(items) {
   return items.map(() => ({ ...emptyFlavors() }));
@@ -26,11 +26,25 @@ function flavorsComplete(items, itemFlavors) {
   });
 }
 
+// Generates a unique order ID that survives re-renders (stored outside component
+// so it's never reset by React unmount/remount cycles in Strict Mode or lazy loading).
+// A new ID is only generated when the module is first imported for this session.
+let _sessionOrderId = null;
+function getOrCreateOrderId() {
+  if (!_sessionOrderId) {
+    _sessionOrderId = `HS-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+  }
+  return _sessionOrderId;
+}
+function resetOrderId() {
+  _sessionOrderId = null;
+}
+
 export default function StepConfirm({ form, cartItems: initialItems, onBack, onSuccess }) {
   const titleRef = useRef(null);
-  // Guard: prevents Purchase event from firing more than once per mount,
-  // even if the button is tapped rapidly before the disabled state renders.
-  const purchaseFiredRef = useRef(false);
+  // orderId is stable for the entire checkout session. It's the primary
+  // deduplication key — Apps Script will reject any duplicate submission.
+  const orderIdRef = useRef(getOrCreateOrderId());
   const [items, setItems] = useState(initialItems);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -101,14 +115,15 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       return;
     }
 
-    // Synchronous guard — useRef ensures this check is reliable
-    // regardless of React's state batching or rapid double-taps.
-    if (purchaseFiredRef.current) return;
-    purchaseFiredRef.current = true;
-
+    // Synchronous guard — submitState is set to 'sending' immediately,
+    // preventing any double-tap or re-render from re-entering this function.
+    if (submitState === 'sending' || submitState === 'done') return;
     setSubmitState('sending');
 
+    const orderId = orderIdRef.current;
+
     const params = new URLSearchParams({
+      orderId,
       name,
       phone,
       gov,
@@ -128,6 +143,11 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
     }).catch(() => {});
 
     trackMetaEvent('Purchase', metaParamsFromItems(items, grandTotal));
+
+    // Reset the session order ID so a future order (after going back home)
+    // gets a fresh ID.
+    resetOrderId();
+    setSubmitState('done');
     onSuccess();
   };
 
