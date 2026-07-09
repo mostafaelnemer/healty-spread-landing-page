@@ -5,6 +5,11 @@
 //    Execute as: Me | Who has access: Anyone
 // 4. انسخ الـ URL وحطه في StepConfirm.jsx مكان ORDER_API_URL
 
+// ─── Meta CAPI Config ────────────────────────────────────────────────────────
+var META_PIXEL_ID    = '2211139682969128';
+var META_ACCESS_TOKEN = 'EAAO52NIqswoBR3b5OimOVNcksxaaFFiMylQ8CghlwQPBkkArpuFLQLoztxhZALG6Md3bJ9nWq5PVZCVBN1mSsi9hNTEtyKNCHKqWxgBa7YvWIMT8loma1JdTfesbXXzFoPQGmDKaM5NZAqW7EcpyzWlwmeleCoTFdQWogeAtU7Kt9vOw19WvN6iSKaBbwZDZD';
+var META_CAPI_URL    = 'https://graph.facebook.com/v19.0/' + META_PIXEL_ID + '/events?access_token=' + META_ACCESS_TOKEN;
+
 var HEADERS = [
   'Order ID',   // A  ← مفتاح التكرار
   'التاريخ',    // B
@@ -27,7 +32,7 @@ function handleRequest(e) {
   // Use a lock so concurrent requests don't race and create duplicates
   var lock = LockService.getScriptLock();
   try {
-    lock.waitLock(10000); // wait up to 10 seconds
+    lock.waitLock(10000);
   } catch (err) {
     return jsonOutput({ result: 'error', error: 'Could not acquire lock' });
   }
@@ -69,6 +74,11 @@ function handleRequest(e) {
       p.price    || '',  // L - السعر
     ]);
 
+    // ── Meta CAPI — Purchase event ────────────────────────────────────────────
+    // بيبعت Purchase لـ Meta من السيرفر بنفس الـ eventID اللي البراوزر بعته.
+    // Meta بيشوف eventID واحد من مصدرين → بيعدّه مرة واحدة بس (deduplication).
+    sendMetaPurchase(p, orderId, now);
+
     return jsonOutput({ result: 'success', orderId: orderId });
 
   } catch (err) {
@@ -77,6 +87,78 @@ function handleRequest(e) {
   } finally {
     lock.releaseLock();
   }
+}
+
+/**
+ * Sends a Purchase event to Meta Conversions API.
+ * eventID must match exactly what the Browser Pixel sent — this is what
+ * allows Meta to deduplicate the two signals into one counted event.
+ *
+ * Docs: https://developers.facebook.com/docs/marketing-api/conversions-api
+ */
+function sendMetaPurchase(p, orderId, eventTime) {
+  try {
+    // Parse the numeric value from the price string, e.g. "450 جنيه ..."
+    var value = parseFloat((p.price || '0').replace(/[^0-9.]/g, '')) || 0;
+
+    // Normalise phone: strip spaces/dashes, ensure it starts with country code
+    var rawPhone = (p.phone || '').replace(/[\s\-]/g, '');
+    // Egyptian numbers: 01XXXXXXXXX → 201XXXXXXXXX
+    if (rawPhone.startsWith('0')) rawPhone = '2' + rawPhone;
+
+    var eventData = {
+      data: [
+        {
+          event_name: 'Purchase',
+          event_time: Math.floor(eventTime.getTime() / 1000), // Unix timestamp
+          event_id: orderId,        // ← same ID the browser pixel sent
+          action_source: 'website',
+          user_data: {
+            // Hashed phone (SHA-256) — Meta requires hashed PII
+            ph: [hashSHA256(rawPhone)],
+          },
+          custom_data: {
+            currency: 'EGP',
+            value: value,
+            order_id: orderId,
+            content_type: 'product',
+          },
+        },
+      ],
+      // test_event_code: 'TEST12345', // ← فعّله مؤقتاً من Meta Test Events لو عاوز تتأكد
+    };
+
+    var options = {
+      method: 'POST',
+      contentType: 'application/json',
+      payload: JSON.stringify(eventData),
+      muteHttpExceptions: true,
+    };
+
+    var response = UrlFetchApp.fetch(META_CAPI_URL, options);
+    Logger.log('Meta CAPI response: ' + response.getContentText());
+
+  } catch (err) {
+    // CAPI failure must never block the order — just log it
+    Logger.log('Meta CAPI error: ' + err.message);
+  }
+}
+
+/**
+ * SHA-256 hash using Google Apps Script Utilities.
+ * Meta requires all PII (phone, email, name) to be hashed before sending.
+ */
+function hashSHA256(value) {
+  if (!value) return '';
+  var normalized = value.toString().toLowerCase().trim();
+  var bytes = Utilities.computeDigest(
+    Utilities.DigestAlgorithm.SHA_256,
+    normalized,
+    Utilities.Charset.UTF_8
+  );
+  return bytes.map(function(b) {
+    return ('0' + (b & 0xff).toString(16)).slice(-2);
+  }).join('');
 }
 
 /**
