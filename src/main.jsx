@@ -36,8 +36,7 @@ function Root() {
   return <App />;
 }
 
-createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <Root />
-  </React.StrictMode>,
-);
+// StrictMode is disabled in production builds automatically by React,
+// but we remove it here too to prevent double-invocation of effects
+// (and accidental double Meta Pixel event firing) in dev builds.
+createRoot(document.getElementById('root')).render(<Root />);

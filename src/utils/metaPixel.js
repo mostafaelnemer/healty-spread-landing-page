@@ -1,8 +1,12 @@
 const CURRENCY = 'EGP';
 
-export function trackMetaEvent(eventName, params = {}) {
+// Tracks a Meta Pixel event. Accepts an optional eventID for server-side
+// deduplication — if the same eventID reaches Meta twice (browser + CAPI),
+// Meta will count it only once.
+export function trackMetaEvent(eventName, params = {}, eventID = null) {
   if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
-    window.fbq('track', eventName, params);
+    const options = eventID ? { eventID } : {};
+    window.fbq('track', eventName, params, options);
   }
 }
 

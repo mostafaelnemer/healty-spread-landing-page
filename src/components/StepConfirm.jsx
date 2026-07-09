@@ -26,18 +26,22 @@ function flavorsComplete(items, itemFlavors) {
   });
 }
 
-// Generates a unique order ID that survives re-renders (stored outside component
-// so it's never reset by React unmount/remount cycles in Strict Mode or lazy loading).
-// A new ID is only generated when the module is first imported for this session.
-let _sessionOrderId = null;
+// Generates a unique order ID that survives re-renders and component
+// remounts. Stored in sessionStorage so it persists across lazy-load
+// reimports but is cleared automatically when the tab is closed.
+// A new ID is only created when none exists for this browser session.
+const ORDER_ID_KEY = 'hs_pending_order_id';
+
 function getOrCreateOrderId() {
-  if (!_sessionOrderId) {
-    _sessionOrderId = `HS-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+  let id = sessionStorage.getItem(ORDER_ID_KEY);
+  if (!id) {
+    id = `HS-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+    sessionStorage.setItem(ORDER_ID_KEY, id);
   }
-  return _sessionOrderId;
+  return id;
 }
 function resetOrderId() {
-  _sessionOrderId = null;
+  sessionStorage.removeItem(ORDER_ID_KEY);
 }
 
 export default function StepConfirm({ form, cartItems: initialItems, onBack, onSuccess }) {
@@ -52,6 +56,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
   const [address, setAddress] = useState('');
   const [notes, setNotes] = useState('');
   const [submitState, setSubmitState] = useState('idle');
+  const submitGuardRef = useRef(false);
   const [touched, setTouched] = useState({});
   const [flavorTouched, setFlavorTouched] = useState(false);
   const [itemFlavors, setItemFlavors] = useState(() => initialItemFlavors(initialItems));
@@ -115,9 +120,9 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       return;
     }
 
-    // Synchronous guard — submitState is set to 'sending' immediately,
-    // preventing any double-tap or re-render from re-entering this function.
-    if (submitState === 'sending' || submitState === 'done') return;
+    // Synchronous guard using ref — blocks duplicate submission instantly
+    if (submitGuardRef.current) return;
+    submitGuardRef.current = true;
     setSubmitState('sending');
 
     const orderId = orderIdRef.current;
@@ -142,7 +147,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       mode: 'no-cors',
     }).catch(() => {});
 
-    trackMetaEvent('Purchase', metaParamsFromItems(items, grandTotal));
+    trackMetaEvent('Purchase', metaParamsFromItems(items, grandTotal), orderId);
 
     // Reset the session order ID so a future order (after going back home)
     // gets a fresh ID.

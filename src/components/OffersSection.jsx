@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { formatPrice, SHIPPING_FEE } from '../data/landingData.js';
 import OfferImage from './OfferImage.jsx';
 import { preloadCheckout } from '../utils/preloadCheckout.js';
@@ -15,6 +15,7 @@ import { trackMetaEvent, metaParamsFromOffer, metaParamsFromItems } from '../uti
 
 export default function OffersSection({ intro, offers, onCheckout }) {
   const [cart, setCart] = useState({});
+  const checkoutGuardRef = useRef(false);
 
   const cartCount = getCartCount(cart);
   const subtotal = getCartSubtotal(cart, offers);
@@ -26,9 +27,14 @@ export default function OffersSection({ intro, offers, onCheckout }) {
 
   const addOfferToCart = (offerId) => {
     preloadCheckout();
-    const offer = offers.find((o) => o.id === offerId);
-    if (offer) trackMetaEvent('AddToCart', metaParamsFromOffer(offer, 1));
-    setCart((c) => incrementCartItem(c, offerId));
+    setCart((c) => {
+      const isFirstAdd = !c[offerId];
+      if (isFirstAdd) {
+        const offer = offers.find((o) => o.id === offerId);
+        if (offer) trackMetaEvent('AddToCart', metaParamsFromOffer(offer, 1));
+      }
+      return incrementCartItem(c, offerId);
+    });
   };
 
   const changeQty = (offerId, val) => {
@@ -36,8 +42,10 @@ export default function OffersSection({ intro, offers, onCheckout }) {
   };
 
   const handleCheckout = () => {
+    if (checkoutGuardRef.current) return;
     const items = cartToCheckoutItems(cart, offers);
     if (items.length === 0) return;
+    checkoutGuardRef.current = true;
     trackMetaEvent('InitiateCheckout', metaParamsFromItems(items, grandTotal));
     onCheckout(items);
   };
