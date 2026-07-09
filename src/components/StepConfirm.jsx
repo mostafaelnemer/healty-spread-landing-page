@@ -322,7 +322,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
         type="button"
         className="confirm-order-btn"
         onClick={handleSubmit}
-        disabled={submitState === 'sending'}
+        disabled={submitState === 'sending' || submitState === 'done'}
       >
         {submitState === 'sending' ? '⏳ جاري تسجيل الطلب…' : form.submitLabel}
       </button>
