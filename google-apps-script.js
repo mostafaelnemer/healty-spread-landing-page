@@ -14,7 +14,6 @@ var HEADERS = [
   'النكهات',
   'الكمية',
   'السعر',
-  'Order ID',
 ];
 
 function doPost(e) { return handleRequest(e); }
@@ -38,7 +37,7 @@ function handleRequest(e) {
     var p = e.parameter || {};
     var orderId = (p.orderId || '').trim();
 
-    if (orderId && isDuplicate(sheet, orderId)) {
+    if (orderId && isDuplicate(orderId)) {
       return jsonOutput({ result: 'duplicate', orderId: orderId });
     }
 
@@ -58,7 +57,6 @@ function handleRequest(e) {
       p.flavors  || '-',
       p.quantity || '1',
       p.price    || '',
-      orderId,
     ]);
 
     sendMetaPurchase(p, orderId, now);
@@ -126,17 +124,30 @@ function hashSHA256(value) {
   }).join('');
 }
 
-function isDuplicate(sheet, orderId) {
-  var lastRow = sheet.getLastRow();
-  if (lastRow < 2) return false;
-
-  var startRow = Math.max(2, lastRow - 199);
-  var numRows  = lastRow - startRow + 1;
-  var values   = sheet.getRange(startRow, 12, numRows, 1).getValues();
-
-  for (var i = 0; i < values.length; i++) {
-    if (String(values[i][0]).trim() === orderId) return true;
+function getDedupSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var dedup = ss.getSheetByName('_dedup');
+  if (!dedup) {
+    dedup = ss.insertSheet('_dedup');
+    dedup.hideSheet();
   }
+  return dedup;
+}
+
+function isDuplicate(orderId) {
+  var dedup = getDedupSheet();
+  var lastRow = dedup.getLastRow();
+
+  if (lastRow > 0) {
+    var startRow = Math.max(1, lastRow - 499);
+    var numRows  = lastRow - startRow + 1;
+    var values   = dedup.getRange(startRow, 1, numRows, 1).getValues();
+    for (var i = 0; i < values.length; i++) {
+      if (String(values[i][0]).trim() === orderId) return true;
+    }
+  }
+
+  dedup.appendRow([orderId]);
   return false;
 }
 
