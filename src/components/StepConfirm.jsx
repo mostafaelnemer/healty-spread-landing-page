@@ -44,6 +44,18 @@ function resetOrderId() {
   sessionStorage.removeItem(ORDER_ID_KEY);
 }
 
+function trackPurchaseOnce(response, purchaseData) {
+  if (response.shouldTrackPixel && response.eventId) {
+    const trackedKey = `meta_purchase_tracked_${response.eventId}`;
+
+    if (!sessionStorage.getItem(trackedKey)) {
+      sessionStorage.setItem(trackedKey, '1');
+
+      trackMetaEvent('Purchase', purchaseData, response.eventId);
+    }
+  }
+}
+
 export default function StepConfirm({ form, cartItems: initialItems, onBack, onSuccess }) {
   const titleRef = useRef(null);
   // orderId is stable for the entire checkout session. It's the primary
@@ -140,20 +152,28 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       price: `${grandTotal} جنيه (منتجات: ${totalPrice} + شحن: مجاناً)`,
     });
 
-    // GET + no-cors is the only reliable fire-and-forget method for
-    // Apps Script web apps when CORS headers are not set on the script side.
-    fetch(`${ORDER_API_URL}?${params.toString()}`, {
-      method: 'GET',
-      mode: 'no-cors',
-    }).catch(() => {});
+    try {
+      const orderResponse = await fetch(`${ORDER_API_URL}?${params.toString()}`, {
+        method: 'GET',
+      });
+      const response = await orderResponse.json();
 
-    trackMetaEvent('Purchase', metaParamsFromItems(items, grandTotal), orderId);
+      if (response.result !== 'success' && response.result !== 'duplicate') {
+        throw new Error(response.error || 'Order request failed');
+      }
 
-    // Reset the session order ID so a future order (after going back home)
-    // gets a fresh ID.
-    resetOrderId();
-    setSubmitState('done');
-    onSuccess();
+      trackPurchaseOnce(response, metaParamsFromItems(items, grandTotal));
+
+      // Reset the session order ID so a future order (after going back home)
+      // gets a fresh ID.
+      resetOrderId();
+      setSubmitState('done');
+      onSuccess();
+    } catch (err) {
+      console.error('Order submit failed:', err);
+      submitGuardRef.current = false;
+      setSubmitState('idle');
+    }
   };
 
   return (
