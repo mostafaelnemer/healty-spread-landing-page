@@ -11,7 +11,7 @@ var META_ACCESS_TOKEN = 'EAAO52NIqswoBR3b5OimOVNcksxaaFFiMylQ8CghlwQPBkkArpuFLQL
 var META_CAPI_URL    = 'https://graph.facebook.com/v19.0/' + META_PIXEL_ID + '/events?access_token=' + META_ACCESS_TOKEN;
 
 var HEADERS = [
-  'Order ID',   // A  ← مفتاح التكرار
+  'Order ID',   // A
   'التاريخ',    // B
   'الوقت',      // C
   'الاسم',      // D
@@ -74,9 +74,6 @@ function handleRequest(e) {
       p.price    || '',  // L - السعر
     ]);
 
-    // ── Meta CAPI — Purchase event ────────────────────────────────────────────
-    // بيبعت Purchase لـ Meta من السيرفر بنفس الـ eventID اللي البراوزر بعته.
-    // Meta بيشوف eventID واحد من مصدرين → بيعدّه مرة واحدة بس (deduplication).
     sendMetaPurchase(p, orderId, now);
 
     return jsonOutput({ result: 'success', orderId: orderId });
@@ -89,13 +86,6 @@ function handleRequest(e) {
   }
 }
 
-/**
- * Sends a Purchase event to Meta Conversions API.
- * eventID must match exactly what the Browser Pixel sent — this is what
- * allows Meta to deduplicate the two signals into one counted event.
- *
- * Docs: https://developers.facebook.com/docs/marketing-api/conversions-api
- */
 function sendMetaPurchase(p, orderId, eventTime) {
   try {
     // Parse the numeric value from the price string, e.g. "450 جنيه ..."
@@ -125,7 +115,6 @@ function sendMetaPurchase(p, orderId, eventTime) {
           },
         },
       ],
-      // test_event_code: 'TEST12345', // ← فعّله مؤقتاً من Meta Test Events لو عاوز تتأكد
     };
 
     var options = {
@@ -144,10 +133,6 @@ function sendMetaPurchase(p, orderId, eventTime) {
   }
 }
 
-/**
- * SHA-256 hash using Google Apps Script Utilities.
- * Meta requires all PII (phone, email, name) to be hashed before sending.
- */
 function hashSHA256(value) {
   if (!value) return '';
   var normalized = value.toString().toLowerCase().trim();
