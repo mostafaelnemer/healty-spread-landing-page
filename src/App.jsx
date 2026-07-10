@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { landingData } from './data/landingData.js';
 import OffersSection from './components/OffersSection.jsx';
+import { isOrderCompleted } from './components/StepConfirm.jsx';
 
 const StepConfirm = lazy(() => import('./components/StepConfirm.jsx'));
 
@@ -268,6 +269,12 @@ export default function App() {
 
   const goToPurchase = () => {
     navigate('/purchase');
+    // Clear the cart AFTER navigation is triggered so the confirm screen
+    // doesn't flash empty before the route change takes effect.
+    // This also ensures that if the user back-buttons from /purchase to
+    // /add_to_cart, the empty-cart guard (line below) will redirect home.
+    cartRef.current = [];
+    setCartItems([]);
   };
 
   const goHome = () => {
@@ -281,7 +288,17 @@ export default function App() {
   }
 
   if (route === '/add_to_cart') {
-    if (cartRef.current.length === 0) return null;
+    // Guard against back-button re-entry after a completed order.
+    // If the cart is empty (cleared by goToPurchase) OR the last session
+    // order was already completed, redirect home. This prevents
+    // re-submission of the same order while still allowing genuinely
+    // new orders (user adds new items → new orderId → no completed flag).
+    const lastOrderId = sessionStorage.getItem('hs_pending_order_id');
+    if (cartRef.current.length === 0 || (lastOrderId && isOrderCompleted(lastOrderId))) {
+      // Use navigate instead of showing null to ensure clean redirect
+      if (route === '/add_to_cart') navigate('/');
+      return null;
+    }
 
     return (
       <main className="funnel" dir="rtl">

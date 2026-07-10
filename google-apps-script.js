@@ -38,7 +38,9 @@ function handleRequest(e) {
     var orderId = (p.orderId || '').trim();
 
     if (orderId && isDuplicate(orderId)) {
-      return jsonOutput({ result: 'duplicate', orderId: orderId });
+      // Duplicate detected — tell the client NOT to fire the Pixel event.
+      // The CAPI event already fired on the first successful request.
+      return jsonOutput({ result: 'duplicate', orderId: orderId, shouldTrackPixel: false });
     }
 
     var now  = new Date();
@@ -61,7 +63,10 @@ function handleRequest(e) {
 
     sendMetaPurchase(p, orderId, now);
 
-    return jsonOutput({ result: 'success', orderId: orderId });
+    // Return eventId (= orderId) so the client can fire its browser Pixel
+    // event with the SAME event_id that CAPI just used. Meta will
+    // deduplicate the two into a single conversion via this shared ID.
+    return jsonOutput({ result: 'success', orderId: orderId, eventId: orderId, shouldTrackPixel: true });
 
   } catch (err) {
     Logger.log('Error: ' + err.message);

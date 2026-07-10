@@ -3,7 +3,7 @@ import { egyptGovs, formatPrice, SHIPPING_FEE, spreadFlavors } from '../data/lan
 import { emptyFlavors } from './FlavorPicker.jsx';
 import CartFlavors from './CartFlavors.jsx';
 import OfferImage from './OfferImage.jsx';
-import { trackMetaEvent, metaParamsFromItems } from '../utils/metaPixel.js';
+import { trackPurchaseOnce, metaParamsFromItems } from '../utils/metaPixel.js';
 
 const ORDER_API_URL = 'https://script.google.com/macros/s/AKfycbwmCSkvnrX6Ow09kNwJXJoQvRSD-WPQvENWjsGIjSwiSewN40EjbxDmPT6P1A8kRPQl/exec';
 
@@ -35,6 +35,9 @@ const ORDER_ID_KEY = 'hs_pending_order_id';
 function getOrCreateOrderId() {
   let id = sessionStorage.getItem(ORDER_ID_KEY);
   if (!id) {
+    // ── event_id: This orderId IS the event_id shared between the
+    // ── browser Pixel and the server CAPI. It must be identical in both
+    // ── places for Meta's deduplication to merge them into one event.
     id = `HS-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
     sessionStorage.setItem(ORDER_ID_KEY, id);
   }
@@ -44,16 +47,15 @@ function resetOrderId() {
   sessionStorage.removeItem(ORDER_ID_KEY);
 }
 
-function trackPurchaseOnce(response, purchaseData) {
-  if (response.shouldTrackPixel && response.eventId) {
-    const trackedKey = `meta_purchase_tracked_${response.eventId}`;
+// Marks an order as completed in sessionStorage so that back-button
+// navigation to /add_to_cart can detect it and redirect home.
+const ORDER_COMPLETED_PREFIX = 'order_completed_';
 
-    if (!sessionStorage.getItem(trackedKey)) {
-      sessionStorage.setItem(trackedKey, '1');
-
-      trackMetaEvent('Purchase', purchaseData, response.eventId);
-    }
-  }
+export function isOrderCompleted(orderId) {
+  return !!sessionStorage.getItem(`${ORDER_COMPLETED_PREFIX}${orderId}`);
+}
+function markOrderCompleted(orderId) {
+  sessionStorage.setItem(`${ORDER_COMPLETED_PREFIX}${orderId}`, '1');
 }
 
 export default function StepConfirm({ form, cartItems: initialItems, onBack, onSuccess }) {
@@ -162,10 +164,22 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
         throw new Error(response.error || 'Order request failed');
       }
 
-      trackPurchaseOnce(response, metaParamsFromItems(items, grandTotal));
+      // ── event_id: Fire the browser Pixel Purchase event with orderId as
+      // ── the eventID. Apps Script already fired the CAPI event with the
+      // ── same orderId as event_id, so Meta will deduplicate them into
+      // ── one counted conversion. trackPurchaseOnce uses sessionStorage
+      // ── to guarantee this only fires once per orderId, even on remount.
+      if (response.result === 'success') {
+        trackPurchaseOnce(orderId, metaParamsFromItems(items, grandTotal));
+      }
 
-      // Reset the session order ID so a future order (after going back home)
-      // gets a fresh ID.
+      // Mark this order as completed so back-button navigation to
+      // /add_to_cart can detect it and redirect home instead of showing
+      // the checkout form again.
+      markOrderCompleted(orderId);
+
+      // Reset the session order ID so a future order (after going back
+      // home) gets a fresh ID.
       resetOrderId();
       setSubmitState('done');
       onSuccess();
