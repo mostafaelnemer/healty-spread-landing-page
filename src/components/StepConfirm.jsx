@@ -4,6 +4,11 @@ import { emptyFlavors } from './FlavorPicker.jsx';
 import CartFlavors from './CartFlavors.jsx';
 import OfferImage from './OfferImage.jsx';
 import { trackPurchaseOnce, metaParamsFromItems } from '../utils/metaPixel.js';
+import {
+  getOrCreateOrderId,
+  resetOrderId,
+  markOrderCompleted,
+} from '../utils/orderSession.js';
 
 const ORDER_API_URL = 'https://script.google.com/macros/s/AKfycbwmCSkvnrX6Ow09kNwJXJoQvRSD-WPQvENWjsGIjSwiSewN40EjbxDmPT6P1A8kRPQl/exec';
 
@@ -26,37 +31,10 @@ function flavorsComplete(items, itemFlavors) {
   });
 }
 
-// Generates a unique order ID that survives re-renders and component
-// remounts. Stored in sessionStorage so it persists across lazy-load
-// reimports but is cleared automatically when the tab is closed.
-// A new ID is only created when none exists for this browser session.
-const ORDER_ID_KEY = 'hs_pending_order_id';
-
-function getOrCreateOrderId() {
-  let id = sessionStorage.getItem(ORDER_ID_KEY);
-  if (!id) {
-    // ── event_id: This orderId IS the event_id shared between the
-    // ── browser Pixel and the server CAPI. It must be identical in both
-    // ── places for Meta's deduplication to merge them into one event.
-    id = `HS-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
-    sessionStorage.setItem(ORDER_ID_KEY, id);
-  }
-  return id;
-}
-function resetOrderId() {
-  sessionStorage.removeItem(ORDER_ID_KEY);
-}
-
-// Marks an order as completed in sessionStorage so that back-button
-// navigation to /add_to_cart can detect it and redirect home.
-const ORDER_COMPLETED_PREFIX = 'order_completed_';
-
-export function isOrderCompleted(orderId) {
-  return !!sessionStorage.getItem(`${ORDER_COMPLETED_PREFIX}${orderId}`);
-}
-function markOrderCompleted(orderId) {
-  sessionStorage.setItem(`${ORDER_COMPLETED_PREFIX}${orderId}`, '1');
-}
+// Re-export isOrderCompleted from the shared session utility so that
+// App.jsx can import it without triggering a static load of this module.
+// (This module is also lazy-loaded; dual imports caused double submissions.)
+export { isOrderCompleted } from '../utils/orderSession.js';
 
 export default function StepConfirm({ form, cartItems: initialItems, onBack, onSuccess }) {
   const titleRef = useRef(null);

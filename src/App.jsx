@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { landingData } from './data/landingData.js';
 import OffersSection from './components/OffersSection.jsx';
-import { isOrderCompleted } from './components/StepConfirm.jsx';
+import { isOrderCompleted, ORDER_ID_KEY } from './utils/orderSession.js';
 
 const StepConfirm = lazy(() => import('./components/StepConfirm.jsx'));
 
@@ -293,7 +293,7 @@ export default function App() {
     // order was already completed, redirect home. This prevents
     // re-submission of the same order while still allowing genuinely
     // new orders (user adds new items → new orderId → no completed flag).
-    const lastOrderId = sessionStorage.getItem('hs_pending_order_id');
+    const lastOrderId = sessionStorage.getItem(ORDER_ID_KEY);
     if (cartRef.current.length === 0 || (lastOrderId && isOrderCompleted(lastOrderId))) {
       // Use navigate instead of showing null to ensure clean redirect
       if (route === '/add_to_cart') navigate('/');
