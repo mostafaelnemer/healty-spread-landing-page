@@ -169,7 +169,14 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       // ── same orderId as event_id, so Meta will deduplicate them into
       // ── one counted conversion. trackPurchaseOnce uses sessionStorage
       // ── to guarantee this only fires once per orderId, even on remount.
-      if (response.result === 'success') {
+      //
+      // Honour the server's explicit shouldTrackPixel flag — Apps Script
+      // sets it to false when it detects a duplicate orderId, meaning the
+      // CAPI event was NOT re-fired and we must not fire the browser
+      // Pixel either. Falling back to true keeps backward-compatibility
+      // with older deployments that don't send the flag.
+      const shouldTrackPixel = response.shouldTrackPixel !== false;
+      if (response.result === 'success' && shouldTrackPixel) {
         trackPurchaseOnce(orderId, metaParamsFromItems(items, grandTotal));
       }
 
