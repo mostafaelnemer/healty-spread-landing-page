@@ -16,6 +16,17 @@ var HEADERS = [
   'السعر',
 ];
 
+// ── CORS preflight: browsers send OPTIONS before POST cross-origin.
+// Apps Script doesn't natively handle OPTIONS, so we return 200 immediately.
+function doOptions(e) {
+  return ContentService
+    .createTextOutput('')
+    .setMimeType(ContentService.MimeType.TEXT);
+}
+
+// POST is the primary method (avoids the 302-redirect double-execution
+// that GET requests cause on Apps Script web apps).
+// GET is kept as a fallback for direct URL testing only.
 function doPost(e) { return handleRequest(e); }
 function doGet(e)  { return handleRequest(e); }
 
@@ -28,19 +39,36 @@ function handleRequest(e) {
   }
 
   try {
+    // ── Parse params: support both POST JSON body and GET URL params.
+    // POST body is preferred (no redirect issue). GET params are a fallback.
+    var p = {};
+    if (e.postData && e.postData.contents) {
+      try {
+        p = JSON.parse(e.postData.contents);
+      } catch (parseErr) {
+        p = e.parameter || {};
+      }
+    } else {
+      p = e.parameter || {};
+    }
+
+    var orderId = (p.orderId || '').trim();
+
+    // ── CRITICAL: reject requests with no orderId — they cannot be deduped.
+    if (!orderId) {
+      return jsonOutput({ result: 'error', error: 'Missing orderId' });
+    }
+
+    // ── Dedup check (inside the lock, so it's race-condition safe).
+    if (isDuplicate(orderId)) {
+      Logger.log('Duplicate orderId rejected: ' + orderId);
+      return jsonOutput({ result: 'duplicate', orderId: orderId, shouldTrackPixel: false });
+    }
+
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 
     if (sheet.getLastRow() === 0) {
       sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
-    }
-
-    var p = e.parameter || {};
-    var orderId = (p.orderId || '').trim();
-
-    if (orderId && isDuplicate(orderId)) {
-      // Duplicate detected — tell the client NOT to fire the Pixel event.
-      // The CAPI event already fired on the first successful request.
-      return jsonOutput({ result: 'duplicate', orderId: orderId, shouldTrackPixel: false });
     }
 
     var now  = new Date();
@@ -63,9 +91,6 @@ function handleRequest(e) {
 
     sendMetaPurchase(p, orderId, now);
 
-    // Return eventId (= orderId) so the client can fire its browser Pixel
-    // event with the SAME event_id that CAPI just used. Meta will
-    // deduplicate the two into a single conversion via this shared ID.
     return jsonOutput({ result: 'success', orderId: orderId, eventId: orderId, shouldTrackPixel: true });
 
   } catch (err) {
@@ -144,7 +169,7 @@ function isDuplicate(orderId) {
   var lastRow = dedup.getLastRow();
 
   if (lastRow > 0) {
-    var startRow = Math.max(1, lastRow - 499);
+    var startRow = Math.max(1, lastRow - 999);
     var numRows  = lastRow - startRow + 1;
     var values   = dedup.getRange(startRow, 1, numRows, 1).getValues();
     for (var i = 0; i < values.length; i++) {
@@ -152,7 +177,9 @@ function isDuplicate(orderId) {
     }
   }
 
-  dedup.appendRow([orderId]);
+  // Write to dedup sheet BEFORE returning — so if we crash after this
+  // but before appendRow, we don't write a duplicate on retry.
+  dedup.appendRow([orderId, new Date().toISOString()]);
   return false;
 }
 
