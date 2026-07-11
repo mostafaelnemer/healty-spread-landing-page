@@ -49,9 +49,18 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
   const [notes, setNotes] = useState('');
   const [submitState, setSubmitState] = useState('idle');
   const submitGuardRef = useRef(false);
+  const abortControllerRef = useRef(null);
   const [touched, setTouched] = useState({});
   const [flavorTouched, setFlavorTouched] = useState(false);
   const [itemFlavors, setItemFlavors] = useState(() => initialItemFlavors(initialItems));
+
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (items.length === 0) onBack();
@@ -117,6 +126,11 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
     submitGuardRef.current = true;
     setSubmitState('sending');
 
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
     const orderId = orderIdRef.current;
 
     // Extract Meta's first-party cookies so the CAPI event can include
@@ -146,8 +160,13 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
     try {
       const orderResponse = await fetch(`${ORDER_API_URL}?${params.toString()}`, {
         method: 'GET',
+        signal: abortControllerRef.current.signal,
       });
       const response = await orderResponse.json();
+
+      if (orderId !== orderIdRef.current || abortControllerRef.current.signal.aborted) {
+        return;
+      }
 
       if (response.result !== 'success' && response.result !== 'duplicate') {
         throw new Error(response.error || 'Order request failed');
@@ -180,6 +199,9 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       setSubmitState('done');
       onSuccess();
     } catch (err) {
+      if (err.name === 'AbortError') {
+        return;
+      }
       console.error('Order submit failed:', err);
       submitGuardRef.current = false;
       setSubmitState('idle');
