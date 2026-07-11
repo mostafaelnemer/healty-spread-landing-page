@@ -86,7 +86,7 @@ function handleRequest(e) {
       p.bundle   || '',
       p.flavors  || '-',
       p.quantity || '1',
-      p.price    || '',
+      p.price ? (p.price + ' جنيه') : '',
     ]);
 
     sendMetaPurchase(p, orderId, now);
@@ -103,7 +103,8 @@ function handleRequest(e) {
 
 function sendMetaPurchase(p, orderId, eventTime) {
   try {
-    var value = parseFloat((p.price || '0').replace(/[^0-9.]/g, '')) || 0;
+    // price is now sent as a clean numeric string (e.g. "199")
+    var value = parseFloat(p.price || '0') || 0;
 
     var rawPhone = (p.phone || '').replace(/[\s\-]/g, '');
     if (rawPhone.startsWith('0')) rawPhone = '2' + rawPhone;

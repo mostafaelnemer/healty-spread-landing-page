@@ -128,7 +128,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       return match ? decodeURIComponent(match[1]) : '';
     };
 
-    const body = {
+    const params = new URLSearchParams({
       orderId,
       name,
       phone,
@@ -138,17 +138,14 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       bundle: buildOfferSummary(),
       flavors: buildFlavorSummary(),
       quantity: String(items.reduce((s, item) => s + item.qty, 0)),
-      price: `${grandTotal} جنيه (منتجات: ${totalPrice} + شحن: مجاناً)`,
+      price: String(grandTotal),
       fbp: getCookie('_fbp'),
       fbc: getCookie('_fbc'),
-    };
+    });
 
     try {
-      const orderResponse = await fetch(ORDER_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-        redirect: 'follow',
+      const orderResponse = await fetch(`${ORDER_API_URL}?${params.toString()}`, {
+        method: 'GET',
       });
       const response = await orderResponse.json();
 
