@@ -142,7 +142,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       return match ? decodeURIComponent(match[1]) : '';
     };
 
-    const params = new URLSearchParams({
+    const payload = {
       orderId,
       name,
       phone,
@@ -155,12 +155,13 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       price: String(grandTotal),
       fbp: getCookie('_fbp'),
       fbc: getCookie('_fbc'),
-    });
+    };
 
     try {
-      const orderResponse = await fetch(`${ORDER_API_URL}?${params.toString()}`, {
-        method: 'GET',
+      const orderResponse = await fetch(ORDER_API_URL, {
+        method: 'POST',
         signal: abortControllerRef.current.signal,
+        body: JSON.stringify(payload),
       });
       const response = await orderResponse.json();
 
