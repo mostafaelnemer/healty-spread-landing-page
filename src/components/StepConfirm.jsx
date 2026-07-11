@@ -119,6 +119,15 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
 
     const orderId = orderIdRef.current;
 
+    // Extract Meta's first-party cookies so the CAPI event can include
+    // them for proper server-side deduplication. Without fbp/fbc, Meta
+    // cannot reliably match the CAPI event to the browser Pixel event
+    // even when event_id is identical — resulting in 2 counted purchases.
+    const getCookie = (name) => {
+      const match = document.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]*)'));
+      return match ? decodeURIComponent(match[1]) : '';
+    };
+
     const body = {
       orderId,
       name,
@@ -130,6 +139,8 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       flavors: buildFlavorSummary(),
       quantity: String(items.reduce((s, item) => s + item.qty, 0)),
       price: `${grandTotal} جنيه (منتجات: ${totalPrice} + شحن: مجاناً)`,
+      fbp: getCookie('_fbp'),
+      fbc: getCookie('_fbc'),
     };
 
     try {

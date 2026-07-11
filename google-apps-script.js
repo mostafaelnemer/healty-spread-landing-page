@@ -108,15 +108,22 @@ function sendMetaPurchase(p, orderId, eventTime) {
     var rawPhone = (p.phone || '').replace(/[\s\-]/g, '');
     if (rawPhone.startsWith('0')) rawPhone = '2' + rawPhone;
 
+    // Build user_data — include fbp & fbc when provided by the browser.
+    // These cookies are essential for Meta to deduplicate this CAPI event
+    // against the browser Pixel event sharing the same event_id (orderId).
+    var userData = {
+      ph: [hashSHA256(rawPhone)],
+    };
+    if (p.fbp) userData.fbp = p.fbp;
+    if (p.fbc) userData.fbc = p.fbc;
+
     var eventData = {
       data: [{
         event_name: 'Purchase',
         event_time: Math.floor(eventTime.getTime() / 1000),
         event_id: orderId,
         action_source: 'website',
-        user_data: {
-          ph: [hashSHA256(rawPhone)],
-        },
+        user_data: userData,
         custom_data: {
           currency: 'EGP',
           value: value,
