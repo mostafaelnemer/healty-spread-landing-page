@@ -18,7 +18,7 @@ export const spreadFlavors = [
 
 export const heroImages = productImages;
 
-export const egyptGovs = ['القاهرة', 'الجيزة', 'الإسكندرية'];
+export const egyptGovs = ['القاهرة', 'الجيزة', 'الإسكندرية', 'طنطا', 'المنصورة', 'السويس', 'دمياط'];
 
 export const landingData = {
   brand: {
