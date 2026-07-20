@@ -118,7 +118,8 @@ export default function OffersSection({ intro, offers, onCheckout }) {
 
                 <div className="bundle-row-info">
                   <h3>{offer.title}</h3>
-                  <p>{offer.description}</p>
+                  {offer.amount && <p className="bundle-row-amount">{offer.amount}</p>}
+                  {offer.description && <p>{offer.description}</p>}
                   {offer.note && <p className="bundle-row-note">{offer.note}</p>}
                   <div className="bundle-row-price">
                     <strong>{formatPrice(offer.price * displayQty)}</strong>

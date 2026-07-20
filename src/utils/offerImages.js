@@ -1,6 +1,7 @@
 const loaders = {
   'two-jars':   () => import('../assets/el3ard.jpeg'),
-  'three-jars': () => import('../assets/el3ard1.jpeg'),
+  'three-jars': () => import('../assets/3pieces.jpeg'),
+  'four-jars':  () => import('../assets/4pieces.jpeg'),
 };
 
 const cache = new Map();

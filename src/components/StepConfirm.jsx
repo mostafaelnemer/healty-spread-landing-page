@@ -151,7 +151,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       notes: notes || '',
       bundle: buildOfferSummary(),
       flavors: buildFlavorSummary(),
-      quantity: String(items.reduce((s, item) => s + item.qty, 0)),
+      quantity: String(items.reduce((s, item) => s + item.offer.unitsPerPack * item.qty, 0)),
       price: String(grandTotal),
       fbp: getCookie('_fbp'),
       fbc: getCookie('_fbc'),
