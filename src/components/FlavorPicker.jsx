@@ -5,7 +5,7 @@ const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
 const toArabic = (n) => n.toString().replace(/\d/g, (d) => ARABIC_DIGITS[d]);
 
 export function emptyFlavors() {
-  return { kids: 0, original: 0, protein: 0, vegan: 0, peanut: 0 };
+  return { kids: 0, original: 0, protein: 0, vegan: 0, peanut: 0, prestige: 0, coconut: 0, highProtein: 0, chocolatePeanut: 0 };
 }
 
 function buildFlavorRecord(qtys) {
@@ -65,7 +65,10 @@ export default function FlavorPicker({
           const canAdd = remaining > 0 && !(isNew && activeFlavors >= maxFlavors);
 
           return (
-            <div key={f.id} className={`fp-qty-row${qty > 0 ? ' fp-qty-row--active' : ''}`}>
+            <div
+              key={f.id}
+              className={`fp-qty-row${qty > 0 ? ' fp-qty-row--active' : ''}${f.featured ? ' fp-qty-row--featured' : ''}`}
+            >
               <img
                 src={f.image}
                 alt={f.shortLabel}
@@ -75,7 +78,10 @@ export default function FlavorPicker({
                 loading="lazy"
                 decoding="async"
               />
-              <span className="fp-qty-name">{f.shortLabel}</span>
+              <span className="fp-qty-name">
+                {f.shortLabel}
+                {f.badge && <span className="fp-qty-badge">{f.badge}</span>}
+              </span>
               <div className="fp-qty-counter" role="group" aria-label={`كمية ${f.shortLabel}`}>
                 <button
                   type="button"

@@ -4,16 +4,24 @@ import product2 from '../assets/2.webp';
 import product3 from '../assets/3.webp';
 import product4 from '../assets/4.webp';
 import product5 from '../assets/5.webp';
+import product6 from '../assets/prestiege.webp';
+import product7 from '../assets/coconut.webp';
+import product8 from '../assets/beanut_butter_high_protien.webp';
+import product9 from '../assets/beanut_butter.webp';
 
-/** Product shots in carousel / gallery order: أوجينال، بروتين، فيجن، أطفال، زبدة فول سوداني */
-export const productImages = [product1, product2, product3, product4, product5];
+/** Product shots in carousel / gallery order: أطفال، أوجينال، بروتين، فيجن، بريستيج، جوز هند، زبدة فول سوداني، زبدة فول سوداني عالي البروتين، زبدة فول سوداني شيكولاتة */
+export const productImages = [product4, product1, product2, product3, product6, product7, product5, product8, product9];
 
 export const spreadFlavors = [
   { id: 'kids',    label: 'سبريد شيكولاتة أطفال 375 جرام',   shortLabel: 'أطفال',          emoji: '🧒', image: product4 },
   { id: 'original',label: 'سبريد شيكولاتة أوجينال 375 جرام',  shortLabel: 'أوجينال',        emoji: '🍫', image: product1 },
   { id: 'protein', label: 'سبريد شيكولاتة بروتين 375 جرام',   shortLabel: 'بروتين',         emoji: '💪', image: product2 },
   { id: 'vegan',   label: 'سبريد شيكولاتة فيجن 375 جرام',     shortLabel: 'فيجن',           emoji: '🌱', image: product3 },
+  { id: 'prestige', label: 'سبريد شيكولاتة بريستيج 375 جرام', shortLabel: 'بريستيج', emoji: '👑', badge: '(بندق أكتر)', featured: true, image: product6 },
+  { id: 'coconut', label: 'سبريد جوز هند 375 جرام',            shortLabel: 'جوز هند',        emoji: '🥥', image: product7 },
   { id: 'peanut',  label: 'زبدة فول سوداني 375 جرام',         shortLabel: 'زبدة فول سوداني', emoji: '🥜', image: product5 },
+  { id: 'highProtein', label: 'زبدة فول سوداني عالي البروتين 375 جرام', shortLabel: 'زبدة فول سوداني عالي البروتين', emoji: '💪', image: product8 },
+  { id: 'chocolatePeanut', label: 'زبدة فول سوداني شيكولاتة 375 جرام', shortLabel: 'زبدة فول سوداني شيكولاتة', emoji: '🍫', image: product9 },
 ];
 
 export const heroImages = productImages;
@@ -72,7 +80,11 @@ export const landingData = {
       { title: 'مكونات أخف', note: 'مناسب للاستخدام اليومي بدون سكر مضاف' },
       { title: 'سناك سريع', note: 'ينفع مع الفطار أو بين الوجبات' },
       { title: 'اختيار صحي', note: 'مناسب لأسلوب حياة أخف' },
+      { title: 'بريستيج', note: 'نكهة فاخرة وغنية ببندق أكتر' },
+      { title: 'جوز هند', note: 'نكهة جوز هند استوائية منعشة' },
       { title: 'زبدة فول سوداني', note: 'نكهة فول سوداني غنية بدون سكر مضاف' },
+      { title: 'زبدة فول سوداني عالي البروتين', note: 'مثالي للرياضيين ومحبي البروتين' },
+      { title: 'زبدة فول سوداني شيكولاتة', note: 'مزيج مثالي من فول السوداني والشوكولاتة' },
     ],
   },
   offersIntro: {
@@ -90,7 +102,7 @@ export const landingData = {
       originalPrice: 600,
       saving: 150,
       unitsPerPack: 2,
-      maxFlavors: 5,
+      maxFlavors: 9,
       badge: 'توفير 🔥',
       accent: '#5f2d91',
       note: '',
@@ -104,7 +116,7 @@ export const landingData = {
       originalPrice: 900,
       saving: 250,
       unitsPerPack: 3,
-      maxFlavors: 5,
+      maxFlavors: 9,
       badge: '⭐ الأكثر طلبًا',
       accent: '#b11730',
       note: '',
@@ -118,7 +130,7 @@ export const landingData = {
       originalPrice: 1200,
       saving: 350,
       unitsPerPack: 4,
-      maxFlavors: 5,
+      maxFlavors: 9,
       badge: 'أكبر توفير 🔥',
       accent: '#0f766e',
       note: '',

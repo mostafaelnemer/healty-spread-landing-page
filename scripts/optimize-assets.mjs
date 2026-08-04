@@ -14,7 +14,11 @@ const assets = join(root, 'src', 'assets');
 const fontsDir = join(assets, 'fonts');
 const publicDir = join(root, 'public');
 
-const images = ['1.png', '2.png', '3.png', '4.png', '5.png', '3ard1.jpeg', '3ard2.jpeg', 'logo.png'];
+const images = [
+  '1.png', '2.png', '3.png', '4.png', '5.png',
+  '3ard1.jpeg', '3ard2.jpeg', 'logo.png',
+  'beanut_butter.png', 'beanut_butter_high_protien.png', 'coconut.png', 'prestiege.png',
+];
 
 for (const file of images) {
   const input = join(assets, file);
