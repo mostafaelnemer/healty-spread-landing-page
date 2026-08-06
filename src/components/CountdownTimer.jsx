@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const SOUND_KEY = 'hs_timer_sound';
 
@@ -7,12 +7,8 @@ const SOUND_KEY = 'hs_timer_sound';
 // timer disappears for all visitors. To re-run the promo, edit this date.
 const DEADLINE = new Date(2026, 7, 8, 0, 0, 0).getTime();
 
-function readSoundEnabled() {
-  return localStorage.getItem(SOUND_KEY) !== 'off';
-}
-
-// ── Shared sound state across all timer instances ──
-let soundEnabled = readSoundEnabled();
+// ── Shared sound state (all timer instances stay in sync) ──
+let soundEnabled = localStorage.getItem(SOUND_KEY) !== 'off';
 const soundListeners = new Set();
 
 function setSharedSound(enabled) {
@@ -26,12 +22,15 @@ function subscribeSound(fn) {
   return () => soundListeners.delete(fn);
 }
 
-function playTick(audioRef) {
-  let { ctx } = audioRef.current;
+// ── Shared ticking: ONE sound per second no matter how many timers ──
+const audio = { ctx: null };
+
+function playTick() {
+  let { ctx } = audio;
   if (!ctx) {
     try {
       ctx = new (window.AudioContext || window.webkitAudioContext)();
-      audioRef.current.ctx = ctx;
+      audio.ctx = ctx;
     } catch (e) {
       return;
     }
@@ -52,40 +51,48 @@ function playTick(audioRef) {
   osc.stop(now + 0.08);
 }
 
+let sharedNow = Date.now();
+const nowListeners = new Set();
+let tickTimer = null;
+
+function subscribeNow(fn) {
+  nowListeners.add(fn);
+  fn(sharedNow);
+  if (!tickTimer) {
+    tickTimer = setInterval(() => {
+      sharedNow = Date.now();
+      if (soundEnabled) playTick();
+      nowListeners.forEach((listener) => listener(sharedNow));
+    }, 1000);
+  }
+  return () => {
+    nowListeners.delete(fn);
+    if (nowListeners.size === 0 && tickTimer) {
+      clearInterval(tickTimer);
+      tickTimer = null;
+    }
+  };
+}
+
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
 const toArabic = (n) => n.toString().padStart(2, '0').replace(/\d/g, (d) => ARABIC_DIGITS[d]);
 
 export default function CountdownTimer({ variant = 'offers' }) {
-  const [now, setNow] = useState(Date.now);
+  const [now, setNow] = useState(sharedNow);
   const [soundOn, setSoundOn] = useState(soundEnabled);
-  const audioRef = useRef({ ctx: null });
-  const lastSecondRef = useRef(null);
 
-  useEffect(() => {
-    const unsubscribe = subscribeSound(setSoundOn);
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => {
-      unsubscribe();
-      clearInterval(timer);
-      audioRef.current.ctx?.close();
-    };
-  }, []);
+  useEffect(() => subscribeNow(setNow), []);
+  useEffect(() => subscribeSound(setSoundOn), []);
 
   const diff = Math.max(0, DEADLINE - now);
   const totalSeconds = Math.floor(diff / 1000);
 
-  useEffect(() => {
-    if (totalSeconds === lastSecondRef.current) return;
-    lastSecondRef.current = totalSeconds;
-    if (soundOn) playTick(audioRef);
-  }, [totalSeconds, soundOn]);
-
   const toggleSound = () => {
     setSharedSound(!soundEnabled);
-    if (audioRef.current.ctx?.state === 'suspended') audioRef.current.ctx.resume();
+    if (audio.ctx?.state === 'suspended') audio.ctx.resume();
   };
 
-  // Deadline passed — hide the timer entirely (it only runs for 24 real hours).
+  // Deadline passed — hide the timer entirely.
   if (totalSeconds <= 0) return null;
 
   const hours = Math.floor(totalSeconds / 3600);
