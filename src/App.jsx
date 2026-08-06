@@ -338,6 +338,7 @@ export default function App() {
         <Benefits benefits={landingData.benefits} />
       </main>
       <Footer brand={landingData.brand} footer={landingData.footer} />
+      <CountdownTimer variant="floating" />
     </>
   );
 }

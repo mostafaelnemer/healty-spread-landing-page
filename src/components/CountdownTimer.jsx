@@ -80,9 +80,25 @@ const toArabic = (n) => n.toString().padStart(2, '0').replace(/\d/g, (d) => ARAB
 export default function CountdownTimer({ variant = 'offers' }) {
   const [now, setNow] = useState(sharedNow);
   const [soundOn, setSoundOn] = useState(soundEnabled);
+  const [offersVisible, setOffersVisible] = useState(false);
 
   useEffect(() => subscribeNow(setNow), []);
   useEffect(() => subscribeSound(setSoundOn), []);
+
+  useEffect(() => {
+    if (variant !== 'floating') return undefined;
+    const el = document.getElementById('offers');
+    if (!el || typeof IntersectionObserver === 'undefined') return undefined;
+
+    // Hide the floating timer only while the offers section fills the
+    // middle of the screen (the in-section countdown takes over there).
+    const observer = new IntersectionObserver(
+      (entries) => setOffersVisible(entries[0].isIntersecting),
+      { rootMargin: '-35% 0px -35% 0px', threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [variant]);
 
   const diff = Math.max(0, DEADLINE - now);
   const totalSeconds = Math.floor(diff / 1000);
@@ -112,6 +128,22 @@ export default function CountdownTimer({ variant = 'offers' }) {
       {soundOn ? '🔊' : '🔇'}
     </button>
   );
+
+  if (variant === 'floating') {
+    if (offersVisible) return null;
+    return (
+      <div className="floating-timer" role="timer" aria-live="polite">
+        <span className="floating-timer-info">
+          <span className="floating-timer-label">⏰ العرض ينتهي خلال</span>
+          <span className="floating-timer-time">{time}</span>
+        </span>
+        {soundBtn}
+        <a className="floating-timer-cta" href="#offers">
+          اطلب دلوقتي
+        </a>
+      </div>
+    );
+  }
 
   if (variant === 'bar') {
     return (
