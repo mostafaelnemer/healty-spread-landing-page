@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { formatPrice, SHIPPING_FEE } from '../data/landingData.js';
 import OfferImage from './OfferImage.jsx';
+import CountdownTimer from './CountdownTimer.jsx';
 import { preloadCheckout } from '../utils/preloadCheckout.js';
 import { loadOfferImage } from '../utils/offerImages.js';
 import {
@@ -85,6 +86,8 @@ export default function OffersSection({ intro, offers, onCheckout }) {
           <span className="eyebrow">{intro.eyebrow}</span>
           <h2>{intro.title}</h2>
           <p>{intro.description}</p>
+          <span className="weight-badge">⚖️ كل العبوات 375 جرام</span>
+          <CountdownTimer />
         </div>
 
         <div className="bundle-list">
@@ -126,7 +129,7 @@ export default function OffersSection({ intro, offers, onCheckout }) {
                     <s>{formatPrice(offer.originalPrice * displayQty)}</s>
                     <span className="saving-tag">وفر {formatPrice(offer.saving * displayQty)}</span>
                   </div>
-                  <p className="bundle-row-shipping">🚚 توصيل مجاناً</p>
+                  <p className="bundle-row-shipping">🚚 توصيل مجاناً · ⚖️ 375 جرام لكل برطمان</p>
 
                   {inCart ? (
                     <div

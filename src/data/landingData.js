@@ -13,15 +13,15 @@ import product9 from '../assets/beanut_butter.webp';
 export const productImages = [product4, product1, product2, product3, product6, product7, product5, product8, product9];
 
 export const spreadFlavors = [
-  { id: 'kids',    label: 'سبريد شيكولاتة أطفال 375 جرام',   shortLabel: 'أطفال',          emoji: '🧒', image: product4 },
-  { id: 'original',label: 'سبريد شيكولاتة أوجينال 375 جرام',  shortLabel: 'أوجينال',        emoji: '🍫', image: product1 },
-  { id: 'protein', label: 'سبريد شيكولاتة بروتين 375 جرام',   shortLabel: 'بروتين',         emoji: '💪', image: product2 },
-  { id: 'vegan',   label: 'سبريد شيكولاتة فيجن 375 جرام',     shortLabel: 'فيجن',           emoji: '🌱', image: product3 },
-  { id: 'prestige', label: 'سبريد شيكولاتة بريستيج 375 جرام', shortLabel: 'بريستيج', emoji: '👑', badge: '(بندق أكتر)', featured: true, image: product6 },
-  { id: 'coconut', label: 'سبريد جوز هند 375 جرام',            shortLabel: 'جوز هند',        emoji: '🥥', image: product7 },
-  { id: 'peanut',  label: 'زبدة فول سوداني 375 جرام',         shortLabel: 'زبدة فول سوداني', emoji: '🥜', image: product5 },
-  { id: 'highProtein', label: 'زبدة فول سوداني عالي البروتين 375 جرام', shortLabel: 'زبدة فول سوداني عالي البروتين', emoji: '💪', image: product8 },
-  { id: 'chocolatePeanut', label: 'زبدة فول سوداني شيكولاتة 375 جرام', shortLabel: 'زبدة فول سوداني شيكولاتة', emoji: '🍫', image: product9 },
+  { id: 'kids',    label: 'سبريد شيكولاتة أطفال 375 جرام',   shortLabel: 'أطفال',          emoji: '🧒', weight: '375 جرام', image: product4 },
+  { id: 'original',label: 'سبريد شيكولاتة أوجينال 375 جرام',  shortLabel: 'أوجينال',        emoji: '🍫', weight: '375 جرام', image: product1 },
+  { id: 'protein', label: 'سبريد شيكولاتة بروتين 375 جرام',   shortLabel: 'بروتين',         emoji: '💪', weight: '375 جرام', image: product2 },
+  { id: 'vegan',   label: 'سبريد شيكولاتة فيجن 375 جرام',     shortLabel: 'فيجن',           emoji: '🌱', weight: '375 جرام', image: product3 },
+  { id: 'prestige', label: 'سبريد شيكولاتة بريستيج 375 جرام', shortLabel: 'بريستيج', emoji: '👑', weight: '375 جرام', badge: '(بندق أكتر)', featured: true, image: product6 },
+  { id: 'coconut', label: 'سبريد جوز هند 375 جرام',            shortLabel: 'جوز هند',        emoji: '🥥', weight: '375 جرام', image: product7 },
+  { id: 'peanut',  label: 'زبدة فول سوداني 375 جرام',         shortLabel: 'زبدة فول سوداني', emoji: '🥜', weight: '375 جرام', image: product5 },
+  { id: 'highProtein', label: 'زبدة فول سوداني عالي البروتين 375 جرام', shortLabel: 'زبدة فول سوداني عالي البروتين', emoji: '💪', weight: '375 جرام', image: product8 },
+  { id: 'chocolatePeanut', label: 'زبدة فول سوداني شيكولاتة 375 جرام', shortLabel: 'زبدة فول سوداني شيكولاتة', emoji: '🍫', weight: '375 جرام', image: product9 },
 ];
 
 export const heroImages = productImages;
@@ -89,7 +89,7 @@ export const landingData = {
   },
   offersIntro: {
     eyebrow: 'اختار العرض المناسب ليك 👇',
-    title: 'عروض Healthy Spread قبل ما تخلص',
+    title: 'الحق العروض قبل ما تخلص',
     description: 'كل العروض شاملة الدفع عند الاستلام 💳 + التوصيل مجاناً 🚚',
   },
   offers: [

@@ -223,6 +223,14 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       {items.map((item, i) => (
         <div key={`${item.offer.id}-${i}`} className="confirm-line">
           <div className="confirm-summary" style={{ '--accent': item.offer.accent }}>
+            <button
+              type="button"
+              className="remove-item-btn"
+              onClick={() => removeItem(i)}
+              aria-label="إزالة من السلة"
+            >
+              ✕
+            </button>
             <div className="confirm-img">
               <OfferImage offerId={item.offer.id} alt={item.offer.title} width={96} height={96} />
             </div>
@@ -232,14 +240,6 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
                   {item.offer.title}
                   {item.qty > 1 ? ` × ${item.qty}` : ''}
                 </h2>
-                <button
-                  type="button"
-                  className="remove-item-btn"
-                  onClick={() => removeItem(i)}
-                  aria-label="إزالة من السلة"
-                >
-                  ✕
-                </button>
               </div>
               <p>{item.offer.description}</p>
               <div className="confirm-price">

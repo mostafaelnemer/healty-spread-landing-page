@@ -79,7 +79,8 @@ export default function FlavorPicker({
                 decoding="async"
               />
               <span className="fp-qty-name">
-                {f.shortLabel}
+                <span className="fp-qty-name-main">{f.shortLabel}</span>
+                {f.weight && <span className="fp-qty-weight">{f.weight}</span>}
                 {f.badge && <span className="fp-qty-badge">{f.badge}</span>}
               </span>
               <div className="fp-qty-counter" role="group" aria-label={`كمية ${f.shortLabel}`}>

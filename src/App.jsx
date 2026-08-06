@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { landingData } from './data/landingData.js';
 import OffersSection from './components/OffersSection.jsx';
+import CountdownTimer from './components/CountdownTimer.jsx';
 import { isOrderCompleted, ORDER_ID_KEY } from './utils/orderSession.js';
 
 const StepConfirm = lazy(() => import('./components/StepConfirm.jsx'));
@@ -36,7 +37,7 @@ function Header({ brand, nav }) {
         <span>•</span>
         <span>Healthy Spread بدون سكر مضاف</span>
         <span>•</span>
-        <span>اطلب قبل نفاد الكمية</span>
+        <CountdownTimer variant="bar" />
       </div>
       <header className="site-header">
         <a className="brand-link" href="/" aria-label={brand.name}>
@@ -314,6 +315,7 @@ export default function App() {
             width={160}
             height={40}
           />
+          <CountdownTimer variant="bar" />
         </div>
         <Suspense fallback={<SectionFallback minHeight={200} />}>
           <StepConfirm
