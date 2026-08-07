@@ -74,8 +74,7 @@ function subscribeNow(fn) {
   };
 }
 
-const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
-const toArabic = (n) => n.toString().padStart(2, '0').replace(/\d/g, (d) => ARABIC_DIGITS[d]);
+const pad2 = (n) => n.toString().padStart(2, '0');
 
 export default function CountdownTimer({ variant = 'offers' }) {
   const [now, setNow] = useState(sharedNow);
@@ -115,7 +114,7 @@ export default function CountdownTimer({ variant = 'offers' }) {
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
 
-  const time = `${toArabic(hours)}:${toArabic(minutes)}:${toArabic(seconds)}`;
+  const time = `${pad2(hours)}:${pad2(minutes)}:${pad2(seconds)}`;
 
   const soundBtn = (
     <button
