@@ -2,10 +2,14 @@ import { useEffect, useState } from 'react';
 
 const SOUND_KEY = 'hs_timer_sound';
 
-// ── Fixed deadline for EVERYONE ──
-// Saturday August 8, 2026 00:00 (local time). After this moment the
-// timer disappears for all visitors. To re-run the promo, edit this date.
-const DEADLINE = new Date(2026, 7, 8, 0, 0, 0).getTime();
+// ── Daily countdown: resets to 24:00:00 every midnight ──
+// The countdown always shows the time remaining until the next
+// 12:00 AM, then automatically resets for a fresh 24 hours.
+function getNextMidnight(from) {
+  const d = new Date(from);
+  d.setHours(24, 0, 0, 0);
+  return d.getTime();
+}
 
 // ── Shared sound state (all timer instances stay in sync) ──
 let soundEnabled = localStorage.getItem(SOUND_KEY) !== 'off';
@@ -99,7 +103,7 @@ export default function CountdownTimer({ variant = 'offers' }) {
     return () => observer.disconnect();
   }, [variant]);
 
-  const diff = Math.max(0, DEADLINE - now);
+  const diff = Math.max(0, getNextMidnight(now) - now);
   const totalSeconds = Math.floor(diff / 1000);
 
   const toggleSound = () => {
@@ -107,7 +111,8 @@ export default function CountdownTimer({ variant = 'offers' }) {
     if (audio.ctx?.state === 'suspended') audio.ctx.resume();
   };
 
-  // Deadline passed — hide the timer entirely.
+  // Next midnight is always ahead of `now`, so the timer never disappears —
+  // it simply resets to a fresh 24:00:00 every day.
   if (totalSeconds <= 0) return null;
 
   const hours = Math.floor(totalSeconds / 3600);
