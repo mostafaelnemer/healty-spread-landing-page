@@ -29,8 +29,8 @@ export const spreadFlavors = [
 export const heroImages = productImages;
 
 export const colaFlavors = [
-  { id: 'cola',  label: 'كولا',        shortLabel: 'كولا',        emoji: '🥤' },
-  { id: 'lemon', label: 'ليمون نعناع', shortLabel: 'ليمون نعناع', emoji: '🍋' },
+  { id: 'cola',  label: 'كولا 350 مل',        shortLabel: 'كولا',        emoji: '🥤', volume: '350 مل' },
+  { id: 'lemon', label: 'ليمون نعناع 350 مل', shortLabel: 'ليمون نعناع', emoji: '🍋', volume: '350 مل' },
 ];
 
 export const egyptGovs = ['القاهرة', 'الجيزة', 'الإسكندرية', 'طنطا', 'المنصورة', 'السويس', 'دمياط'];
