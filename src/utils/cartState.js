@@ -91,7 +91,7 @@ export function bundleSpreadUnits(offer) {
 
 /** Cola shrinks included per 1 bundle quantity (bundle configuration). */
 export function bundleColaShrinks(offer) {
-  return offer?.configuration?.cola?.unitsPerBundle ?? 0;
+  return offer?.configuration?.cola?.unitsPerBundle ?? 1;
 }
 
 /** Bottles inside 1 bundle cola shrink (matches the existing shrink size). */
