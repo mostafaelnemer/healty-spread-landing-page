@@ -129,7 +129,11 @@ export default function OffersSection({ intro, offers, onCheckout }) {
                     <s>{formatPrice(offer.originalPrice * displayQty)}</s>
                     <span className="saving-tag">وفر {formatPrice(offer.saving * displayQty)}</span>
                   </div>
-                  <p className="bundle-row-shipping">🚚 توصيل مجاناً · ⚖️ 375 جرام لكل برطمان · 🥤 350 مل لكل زجاجة كولا</p>
+                  {offer.configuration?.type === 'bundle' ? (
+                    <p className="bundle-row-shipping">🚚 توصيل مجاناً · ⚖️ 375 جرام لكل برطمان · 🥤 350 مل لكل زجاجة كولا</p>
+                  ) : (
+                    <p className="bundle-row-shipping">🚚 توصيل مجاناً · ⚖️ 375 جرام لكل برطمان</p>
+                  )}
 
                   {inCart ? (
                     <div
