@@ -1,9 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
-import { egyptGovs, formatPrice, SHIPPING_FEE, spreadFlavors } from '../data/landingData.js';
+import { egyptGovs, formatPrice, spreadFlavors } from '../data/landingData.js';
 import { emptyFlavors } from './FlavorPicker.jsx';
+import { defaultColaFlavors } from './ColaFlavorDist.jsx';
 import CartFlavors from './CartFlavors.jsx';
 import OfferImage from './OfferImage.jsx';
-import { trackPurchaseOnce, metaParamsFromItems } from '../utils/metaPixel.js';
+import {
+  offerNeedsFlavors,
+  offerNeedsColaConfig,
+  offerNeedsBundleConfig,
+  spreadDistributionTotal,
+  colaDistributionTotal,
+  itemNeedsColaDistribution,
+  getItemsShipping,
+} from '../utils/cartState.js';
+import { trackPurchaseOnce, metaParamsFromItems, setAdvancedMatching } from '../utils/metaPixel.js';
 import {
   getOrCreateOrderId,
   resetOrderId,
@@ -16,19 +26,70 @@ function initialItemFlavors(items) {
   return items.map(() => ({ ...emptyFlavors() }));
 }
 
-function describeFlavors(flavors) {
+function initialItemColaFlavors(items) {
+  return items.map((item) =>
+    itemNeedsColaDistribution(item)
+      ? defaultColaFlavors(colaDistributionTotal(item))
+      : null,
+  );
+}
+
+export function describeFlavors(flavors) {
   return spreadFlavors
     .filter((f) => (flavors[f.id] ?? 0) > 0)
     .map((f) => `${flavors[f.id]} ${f.shortLabel}`)
     .join(' + ');
 }
 
-function flavorsComplete(items, itemFlavors) {
+/**
+ * Validation gate before order submission. Every cart line must have its
+ * required configuration fully distributed:
+ *   - spread offers / bundle spread part: jars used === spread total
+ *   - bundle cola part: bottles distributed === cola total
+ * Totals are derived from the offer configuration × cart quantity.
+ */
+export function flavorsComplete(items, itemFlavors, itemCola) {
   return items.every((item, i) => {
-    const total = item.offer.unitsPerPack * item.qty;
-    const used = spreadFlavors.reduce((s, f) => s + (itemFlavors[i][f.id] ?? 0), 0);
-    return used === total;
+    if (offerNeedsFlavors(item.offer) || offerNeedsBundleConfig(item.offer)) {
+      const total = spreadDistributionTotal(item);
+      const used = spreadFlavors.reduce((s, f) => s + (itemFlavors[i][f.id] ?? 0), 0);
+      if (used !== total) return false;
+    }
+    if (offerNeedsBundleConfig(item.offer)) {
+      const total = colaDistributionTotal(item);
+      const dist = itemCola[i];
+      if ((dist?.cola ?? 0) + (dist?.lemon ?? 0) !== total) return false;
+    }
+    return true;
   });
+}
+
+/**
+ * Readable one-line summary of both spread and cola configurations per
+ * cart line. Spread reuses describeFlavors; cola follows the existing
+ * "(N كولا + M ليمون)" convention. Bundle lines combine both.
+ */
+export function buildFlavorSummary(items, itemFlavors, itemCola) {
+  return items
+    .map((item, i) => {
+      if (offerNeedsBundleConfig(item.offer)) {
+        const spreadDesc = describeFlavors(itemFlavors[i]);
+        const total = colaDistributionTotal(item);
+        const cola = itemCola[i]?.cola ?? 0;
+        const lemon = Math.max(0, total - cola);
+        return `${item.offer.title} ×${item.qty} (سبريد: ${spreadDesc} | كولا: ${cola} كولا + ${lemon} ليمون نعناع)`;
+      }
+      if (offerNeedsFlavors(item.offer)) return describeFlavors(itemFlavors[i]);
+      if (offerNeedsColaConfig(item.offer)) {
+        const total = colaDistributionTotal(item);
+        const cola = itemCola[i]?.cola ?? 0;
+        const lemon = Math.max(0, total - cola);
+        return `${item.offer.title} ×${item.qty} (${cola} كولا + ${lemon} ليمون)`;
+      }
+      return '';
+    })
+    .filter(Boolean)
+    .join(' | ');
 }
 
 // Re-export isOrderCompleted from the shared session utility so that
@@ -53,6 +114,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
   const [touched, setTouched] = useState({});
   const [flavorTouched, setFlavorTouched] = useState(false);
   const [itemFlavors, setItemFlavors] = useState(() => initialItemFlavors(initialItems));
+  const [itemCola, setItemCola] = useState(() => initialItemColaFlavors(initialItems));
 
   useEffect(() => {
     return () => {
@@ -75,8 +137,9 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
   const totalPrice    = items.reduce((sum, item) => sum + item.offer.price    * item.qty, 0);
   const totalOriginal = items.reduce((sum, item) => sum + item.offer.originalPrice * item.qty, 0);
   const totalSaving   = totalOriginal - totalPrice;
-  const grandTotal    = totalPrice + SHIPPING_FEE;
-  const flavorsOk = flavorsComplete(items, itemFlavors);
+  const shipping      = getItemsShipping(items);
+  const grandTotal    = totalPrice + shipping;
+  const flavorsOk = flavorsComplete(items, itemFlavors, itemCola);
 
   const errors = {
     name: !name.trim() ? 'الاسم مطلوب' : '',
@@ -98,13 +161,11 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
   const removeItem = (index) => {
     setItems((prev) => prev.filter((_, i) => i !== index));
     setItemFlavors((prev) => prev.filter((_, i) => i !== index));
+    setItemCola((prev) => prev.filter((_, i) => i !== index));
   };
 
   const buildOfferSummary = () =>
     items.map((item) => `${item.offer.title} ×${item.qty}`).join(' | ');
-
-  const buildFlavorSummary = () =>
-    items.map((item, i) => describeFlavors(itemFlavors[i])).join(' | ');
 
   const handleSubmit = async () => {
     setTouched({ name: true, phone: true, gov: true, address: true });
@@ -125,6 +186,13 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
     if (submitGuardRef.current) return;
     submitGuardRef.current = true;
     setSubmitState('sending');
+
+    // ── Manual Advanced Matching: attach the validated customer data
+    // ── (phone + name) to the Pixel BEFORE any event fires. fbq('init')
+    // ── with user data fires zero events, so this can never create a
+    // ── duplicate — it only enriches the upcoming Purchase with the same
+    // ── normalized phone the CAPI hashes.
+    setAdvancedMatching({ ph: phone.trim(), name: name.trim() });
 
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -150,8 +218,8 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       address,
       notes: notes || '',
       bundle: buildOfferSummary(),
-      flavors: buildFlavorSummary(),
-      quantity: String(items.reduce((s, item) => s + item.offer.unitsPerPack * item.qty, 0)),
+      flavors: buildFlavorSummary(items, itemFlavors, itemCola),
+      quantity: String(items.reduce((s, item) => s + (offerNeedsFlavors(item.offer) ? item.offer.unitsPerPack * item.qty : item.qty), 0)),
       price: String(grandTotal),
       fbp: getCookie('_fbp'),
       fbc: getCookie('_fbc'),
@@ -232,7 +300,13 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
               ✕
             </button>
             <div className="confirm-img">
-              <OfferImage offerId={item.offer.id} alt={item.offer.title} width={96} height={96} />
+              <OfferImage
+                offerId={item.offer.id}
+                alt={item.offer.title}
+                width={96}
+                height={96}
+                fallback={item.offer.image}
+              />
             </div>
             <div className="confirm-info">
               <div className="confirm-info-top">
@@ -241,7 +315,8 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
                   {item.qty > 1 ? ` × ${item.qty}` : ''}
                 </h2>
               </div>
-              <p>{item.offer.description}</p>
+              {item.offer.description && <p>{item.offer.description}</p>}
+              {item.offer.unit && <p className="confirm-unit">{item.offer.unit}</p>}
               <div className="confirm-price">
                 <strong>{formatPrice(item.offer.price * item.qty)}</strong>
                 <s>{formatPrice(item.offer.originalPrice * item.qty)}</s>
@@ -255,7 +330,13 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       ))}
 
       <div id="cart-flavors" className={flavorTouched && !flavorsOk ? 'fp-cart-panel--error' : ''}>
-        <CartFlavors items={items} itemFlavors={itemFlavors} onItemFlavorsChange={setItemFlavors} />
+        <CartFlavors
+          items={items}
+          itemFlavors={itemFlavors}
+          onItemFlavorsChange={setItemFlavors}
+          itemCola={itemCola}
+          onItemColaChange={setItemCola}
+        />
         {flavorTouched && !flavorsOk && (
           <p className="field-msg error fp-flavor-error">من فضلك وزّع كل البرطمانات على النكهات</p>
         )}
@@ -269,7 +350,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
           </div>
           <div className="cart-total-row">
             <span>🚚 الشحن</span>
-            <span>مجاناً</span>
+            <span>{shipping > 0 ? formatPrice(shipping) : 'مجاناً'}</span>
           </div>
           <div className="cart-total-row cart-total-grand">
             <span>الإجمالي</span>

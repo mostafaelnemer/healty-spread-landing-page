@@ -4,6 +4,9 @@ import './FlavorPicker.css';
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
 const toArabic = (n) => n.toString().replace(/\d/g, (d) => ARABIC_DIGITS[d]);
 
+/** Flavors available for selection (hidden ones are temporarily removed). */
+const selectableFlavors = spreadFlavors.filter((f) => !f.hidden);
+
 export function emptyFlavors() {
   return { kids: 0, original: 0, protein: 0, vegan: 0, peanut: 0, prestige: 0, coconut: 0, highProtein: 0, chocolatePeanut: 0 };
 }
@@ -59,7 +62,7 @@ export default function FlavorPicker({
       </div>
 
       <div className="fp-qty-list">
-        {spreadFlavors.map((f) => {
+        {selectableFlavors.map((f) => {
           const qty = qtys[f.id] ?? 0;
           const isNew = qty === 0;
           const canAdd = remaining > 0 && !(isNew && activeFlavors >= maxFlavors);

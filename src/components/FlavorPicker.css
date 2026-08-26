@@ -29,11 +29,74 @@
   border-top: 0;
 }
 
-.fp-cart-line-title {
-  margin: 0 0 10px;
-  color: var(--purple-700);
-  font-size: 0.88rem;
+/* ── Bundle configuration block (Spread + Cola panels) ────────────────────── */
+
+.fp-cart-line--bundle .bundle-config-panel {
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius-sm);
+  background: #fafafa;
+}
+
+.fp-cart-line--bundle .bundle-config-panel:last-child {
+  margin-bottom: 0;
+}
+
+.fp-cart-line--bundle .bundle-config-panel--cola {
+  border-color: rgba(79, 141, 66, 0.35);
+  background: rgba(79, 141, 66, 0.04);
+}
+
+.bundle-config-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.bundle-config-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--purple-700);
+  font-size: 12px;
+}
+
+.bundle-config-panel--cola .bundle-config-num {
+  background: var(--green);
+}
+
+.bundle-config-title {
+  flex: 1;
+  margin: 0;
+  color: var(--cocoa-900);
+  font-size: 0.84rem;
   font-weight: 800;
+}
+
+.bundle-config-count {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 50px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.bundle-config-sub {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 600;
 }
 
 .fp-gift-note {
@@ -113,6 +176,7 @@
 
 .fp-qty-row {
   display: flex;
+  flex-direction: row-reverse; /* stepper on the thumb side in RTL (M4) */
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
@@ -210,8 +274,8 @@
 }
 
 .fp-qty-btn {
-  width: 30px;
-  height: 30px;
+  width: 42px;
+  height: 42px;
   border: none;
   background: transparent;
   color: var(--purple-700);
@@ -232,11 +296,45 @@
 }
 
 .fp-qty-val {
-  width: 28px;
+  width: 40px;
   text-align: center;
   border-right: 1.5px solid #e5e7eb;
   border-left: 1.5px solid #e5e7eb;
   font-size: 0.9rem;
   font-weight: 800;
   color: var(--cocoa-900);
+}
+
+/* ── Collapsible cart lines (native <details>) ── */
+.fp-cart-line-title {
+  margin: 0;
+  padding: 2px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--purple-700);
+  font-size: 0.88rem;
+  font-weight: 800;
+  list-style: none;
+  cursor: pointer;
+}
+
+.fp-cart-line-title::-webkit-details-marker {
+  display: none;
+}
+
+.fp-cart-line-toggle {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  color: var(--muted);
+  transition: transform 0.2s ease;
+}
+
+.fp-cart-line[open] .fp-cart-line-toggle {
+  transform: rotate(180deg);
+}
+
+.fp-cart-line-body {
+  padding-top: 12px;
 }

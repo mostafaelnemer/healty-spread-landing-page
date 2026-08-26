@@ -1,0 +1,131 @@
+/* ── ColaFlavorDist — original Healthy Cola flavor distribution ─────────── */
+
+.cfd-wrapper,
+.cfd-embedded {
+  margin-bottom: 16px;
+}
+
+.cfd-wrapper {
+  padding: 16px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+.cfd-embedded {
+  margin-bottom: 0;
+}
+
+.cfd-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.cfd-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 50px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: rgba(79, 141, 66, 0.1);
+  color: var(--green);
+  border: 1px solid rgba(79, 141, 66, 0.25);
+}
+
+.cfd-hint {
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.cfd-presets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.cfd-preset {
+  min-height: 40px;
+  padding: 8px 6px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 50px;
+  background: #fafafa;
+  color: var(--cocoa-900);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.cfd-preset:hover {
+  border-color: var(--green);
+}
+
+.cfd-preset--active {
+  border-color: var(--green);
+  background: rgba(79, 141, 66, 0.08);
+  color: var(--green);
+}
+
+.cfd-bar {
+  display: flex;
+  height: 8px;
+  border-radius: 50px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  background: #f3f4f6;
+}
+
+.cfd-bar-cola {
+  background: #4f8d42;
+  transition: width 0.2s ease;
+}
+
+.cfd-bar-lemon {
+  background: #f5b51b;
+  transition: width 0.2s ease;
+}
+
+.cfd-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cfd-row {
+  display: flex;
+  flex-direction: row-reverse; /* stepper on the thumb side in RTL (M4) */
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius-sm);
+  background: #fafafa;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.cfd-row--active {
+  border-color: var(--green);
+  background: rgba(79, 141, 66, 0.04);
+}
+
+.cfd-flavor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--cocoa-900);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.cfd-emoji {
+  font-size: 1.1rem;
+}

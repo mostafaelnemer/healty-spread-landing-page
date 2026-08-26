@@ -368,6 +368,7 @@ h3 {
   transform: scale(0.94) translateY(8px);
   transition: opacity 0.35s ease, transform 0.35s ease;
   pointer-events: none;
+  will-change: opacity, transform;
 }
 
 .hero-carousel-img.active {
@@ -503,6 +504,7 @@ h3 {
 
 .section {
   padding: 60px clamp(20px, 5vw, 80px);
+  scroll-margin-top: 80px;
 }
 
 /* Scroll reveal (IntersectionObserver in main.jsx) */
@@ -558,13 +560,14 @@ h3 {
 }
 
 .confirm-line {
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 
 .confirm-line-title {
   margin: 0;
   font-size: 1rem;
   font-weight: 800;
+  line-height: 1.3;
 }
 
 .section-intro {
@@ -980,11 +983,12 @@ h3 {
 }
 
 .saving-tag {
-  padding: 2px 10px;
+  display: inline-block;
+  padding: 4px 14px;
   border-radius: 50px;
   background: rgba(79, 141, 66, 0.15);
   color: var(--green);
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 700;
 }
 
@@ -1504,20 +1508,31 @@ h3 {
   padding: 22px 16px 40px;
 }
 
+.step-screen > * + * {
+  margin-top: 16px;
+}
+
 .cart-summary-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
-  padding: 14px 18px;
-  border-radius: var(--radius);
+  margin-bottom: 0;
+  padding: 16px 20px;
+  border-radius: var(--radius) var(--radius) 0 0;
   background: var(--purple-950);
   color: #fff;
   font-weight: 800;
+  font-size: 1.05rem;
+  box-shadow: 0 2px 8px rgba(29, 13, 47, 0.15);
 }
 
 .cart-summary-total {
   color: var(--gold);
+  font-size: 1.15rem;
+}
+
+.cart-summary-title {
+  font-size: 1.05rem;
 }
 
 .confirm-summary {
@@ -1525,12 +1540,13 @@ h3 {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 0;
   padding: 18px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius);
   background: var(--purple-950);
   color: #fff;
+  box-shadow: 0 2px 12px rgba(29, 13, 47, 0.18);
 }
 
 .confirm-img {
@@ -1563,11 +1579,21 @@ h3 {
   font-weight: 800;
 }
 
+.confirm-info {
+  flex: 1;
+  min-width: 0;
+}
+
 .confirm-info p {
   margin-bottom: 8px;
   color: #9ca3af;
   font-size: 0.8rem;
   font-weight: 600;
+}
+
+.confirm-unit {
+  color: rgba(255, 255, 255, 0.5) !important;
+  font-size: 0.75rem !important;
 }
 
 .confirm-price {
@@ -1641,11 +1667,11 @@ h3 {
 }
 
 .cart-total-bar {
-  margin-bottom: 24px;
-  padding: 14px 18px;
-  border: 1.5px solid #e5e7eb;
+  margin-bottom: 0;
+  padding: 16px 18px;
+  border: 2px solid var(--purple-700);
   border-radius: var(--radius);
-  background: #f9fafb;
+  background: var(--purple-100);
   font-weight: 700;
 }
 
@@ -1666,14 +1692,14 @@ h3 {
 
 .cart-total-grand {
   padding-top: 8px;
-  border-top: 1.5px solid #e5e7eb;
+  border-top: 1.5px solid rgba(95, 45, 145, 0.2);
   color: var(--cocoa-900);
-  font-size: 1rem;
+  font-size: 1.05rem;
 }
 
 .cart-total-grand strong {
   color: var(--purple-700);
-  font-size: 1.2rem;
+  font-size: 1.3rem;
 }
 
 /* ── Checkout summary bar (in OffersSection) ── */
@@ -1725,11 +1751,11 @@ h3 {
 }
 
 .form-card {
-  padding: 20px;
-  border: 1px solid #e5e7eb;
+  padding: 22px;
+  border: 1.5px solid #e5e7eb;
   border-radius: var(--radius);
   background: #fff;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 }
 
 .field {
@@ -1802,17 +1828,20 @@ h3 {
 .back-btn {
   width: 100%;
   margin-top: 10px;
-  padding: 13px;
+  padding: 14px;
   border: 1.5px solid #e5e7eb;
   border-radius: 50px;
   background: transparent;
   color: var(--muted);
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .back-btn:hover {
   background: #f3f4f6;
+  border-color: #d1d5db;
 }
 
 .order-success {
@@ -1880,6 +1909,10 @@ h3 {
 
 /* flavor styles moved to FlavorPicker.css */
 
+.form-section {
+  margin-top: 0;
+}
+
 .form-section h2 {
   margin-bottom: 8px;
   font-size: clamp(1.5rem, 6vw, 2rem);
@@ -1904,14 +1937,33 @@ h3 {
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 52px;
+  min-height: 56px;
   border: 0;
   border-radius: 50px;
   background: var(--purple-700);
   color: #fff;
+  font-size: 1.1rem;
   font-weight: 900;
   cursor: pointer;
   box-shadow: 0 6px 20px rgba(95, 45, 145, 0.28);
+  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.confirm-order-btn:hover:not(:disabled) {
+  background: #4e2278;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 28px rgba(95, 45, 145, 0.35);
+}
+
+.confirm-order-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 4px 14px rgba(95, 45, 145, 0.25);
+}
+
+.confirm-order-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

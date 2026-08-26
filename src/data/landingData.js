@@ -8,6 +8,8 @@ import product6 from '../assets/prestiege.webp';
 import product7 from '../assets/coconut.webp';
 import product8 from '../assets/beanut_butter_high_protien.webp';
 import product9 from '../assets/beanut_butter.webp';
+import bundleImg1 from '../assets/bundle/bundle.webp';
+import bundleImg2 from '../assets/bundle/bundle2.webp';
 
 /** Product shots in carousel / gallery order: أطفال، أوجينال، بروتين، فيجن، بريستيج، جوز هند، زبدة فول سوداني، زبدة فول سوداني عالي البروتين، زبدة فول سوداني شيكولاتة */
 export const productImages = [product4, product1, product2, product3, product6, product7, product5, product8, product9];
@@ -25,6 +27,11 @@ export const spreadFlavors = [
 ];
 
 export const heroImages = productImages;
+
+export const colaFlavors = [
+  { id: 'cola',  label: 'كولا',        shortLabel: 'كولا',        emoji: '🥤' },
+  { id: 'lemon', label: 'ليمون نعناع', shortLabel: 'ليمون نعناع', emoji: '🍋' },
+];
 
 export const egyptGovs = ['القاهرة', 'الجيزة', 'الإسكندرية', 'طنطا', 'المنصورة', 'السويس', 'دمياط'];
 
@@ -134,6 +141,42 @@ export const landingData = {
       badge: 'أكبر توفير 🔥',
       accent: '#0f766e',
       note: '',
+    },
+    {
+      id: 'bundles',
+      title: 'باندل 3 برطمان + 12 زجاجة كولا',
+      amount: '3 برطمان سبريد + 12 زجاجة كولا',
+      description: '',
+      price: 900,
+      originalPrice: 1200,
+      saving: 300,
+      badge: '🔥 باندل مميز',
+      accent: '#b11730',
+      note: '',
+      image: bundleImg1,
+      configuration: {
+        type: 'bundle',
+        spread: { unitsPerBundle: 3, maxFlavors: 9 },
+        cola: { unitsPerShrink: 12 },
+      },
+    },
+    {
+      id: 'bundle2',
+      title: 'باندل 2 برطمان + 6 زجاجات كولا',
+      amount: '2 برطمان سبريد + 6 زجاجات كولا',
+      description: '',
+      price: 550,
+      originalPrice: 750,
+      saving: 200,
+      badge: '✨ اختيار مثالي',
+      accent: '#0f766e',
+      note: '',
+      image: bundleImg2,
+      configuration: {
+        type: 'bundle',
+        spread: { unitsPerBundle: 2, maxFlavors: 9 },
+        cola: { unitsPerShrink: 6 },
+      },
     },
   ],
   loveReasons: {

@@ -17,6 +17,83 @@
  */
 
 const CURRENCY = 'EGP';
+const PIXEL_ID = '2211139682969128';
+
+// ---------------------------------------------------------------------------
+// Manual Advanced Matching (user data)
+// ---------------------------------------------------------------------------
+
+// Normalizes an Egyptian phone exactly like Apps Script does (google-apps-script.js)
+// so the browser pixel and the CAPI payload hash the SAME value.
+// "01012345678" -> "201012345678"
+function normalizePhone(raw) {
+  let p = String(raw).replace(/[\s\-]/g, '');
+  if (p.startsWith('0')) p = '2' + p;
+  return p;
+}
+
+// Tracks the last user data we attached, to avoid redundant re-init calls
+// (each re-init prints a harmless "[Meta Pixel] - Duplicate Pixel ID" console
+// warning, so we only re-init when the data actually changes).
+let lastUserDataKey = '';
+
+/**
+ * Derives Meta `fn`/`ln` from a single full-name field, conservatively.
+ * The checkout collects one "name" input (اكتب اسمك الكامل), so Meta's
+ * fn/ln are only derivable by splitting on whitespace. We never guess:
+ * a single token (e.g. "محمد") yields NO fn/ln — only multi-token names
+ * map first-token → fn and last-token → ln. If Meta hashes a wrong name,
+ * the match simply fails (neutral), so this is safe to attempt.
+ */
+function deriveNameParts(name) {
+  if (!name) return {};
+  const tokens = String(name).trim().split(/\s+/).filter(Boolean);
+  if (tokens.length < 2) return {};
+  return { fn: tokens[0], ln: tokens[tokens.length - 1] };
+}
+
+/**
+ * Attaches manual advanced matching data to the Pixel.
+ *
+ * Why this is safe (NO duplicates):
+ *  - fbq('init', ...) only registers the pixel + attaches user identity.
+ *  - It fires ZERO events, so re-calling it can never produce a duplicate
+ *    Purchase/PageView on its own.
+ *  - The user data is then carried by the NEXT tracked event — the single
+ *    browser Purchase already guarded by trackPurchaseOnce (sessionStorage +
+ *    success + shouldTrackPixel + shared event_id = orderId).
+ *
+ * Call this right before the Purchase event fires, once the checkout form
+ * has validated user data (phone + name). The pixel hashes values (SHA-256)
+ * automatically, so plain-text values are fine here.
+ *
+ * Supported fields (only what the checkout actually collects):
+ *   ph   — Egyptian phone, normalized to E.164-style (20XXXXXXXXX).
+ *   name — full name; fn/ln derived only when reliably splittable.
+ *   em   — accepted for future use, but the checkout has no email field.
+ *
+ * @param {Object} userData  { ph, name, em } — at least one key.
+ */
+export function setAdvancedMatching(userData = {}) {
+  if (typeof window === 'undefined' || typeof window.fbq !== 'function') return;
+
+  const data = {};
+  if (userData.ph) data.ph = normalizePhone(userData.ph);
+  if (userData.em) data.em = String(userData.em).toLowerCase().trim();
+  if (userData.name) {
+    const nameParts = deriveNameParts(userData.name);
+    if (nameParts.fn) data.fn = nameParts.fn;
+    if (nameParts.ln) data.ln = nameParts.ln;
+  }
+
+  if (Object.keys(data).length === 0) return;
+
+  const key = JSON.stringify(data);
+  if (key === lastUserDataKey) return;
+  lastUserDataKey = key;
+
+  window.fbq('init', PIXEL_ID, data);
+}
 
 // ---------------------------------------------------------------------------
 // Core tracking helper
@@ -96,6 +173,7 @@ export function metaParamsFromOffer(offer, qty = 1) {
   return {
     content_ids: [offer.id],
     content_type: 'product',
+    content_category: offer.categoryId || 'general',
     contents: [{ id: offer.id, quantity: qty, item_price: offer.price }],
     num_items: qty,
     value: offer.price * qty,
@@ -112,9 +190,11 @@ function contentsFromItems(items) {
 }
 
 export function metaParamsFromItems(items, totalValue) {
+  const categories = [...new Set(items.map((item) => item.offer.categoryId).filter(Boolean))];
   return {
     content_ids: items.map((item) => item.offer.id),
     content_type: 'product',
+    content_category: categories.length === 1 ? categories[0] : 'mixed',
     contents: contentsFromItems(items),
     num_items: items.reduce((sum, item) => sum + item.qty, 0),
     value: totalValue,
