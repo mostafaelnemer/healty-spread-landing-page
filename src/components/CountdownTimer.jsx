@@ -12,7 +12,7 @@ function getNextMidnight(from) {
 }
 
 // ── Shared sound state (all timer instances stay in sync) ──
-let soundEnabled = localStorage.getItem(SOUND_KEY) !== 'off';
+let soundEnabled = false;
 const soundListeners = new Set();
 
 function setSharedSound(enabled) {
