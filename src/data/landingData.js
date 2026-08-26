@@ -144,8 +144,8 @@ export const landingData = {
     },
     {
       id: 'bundles',
-      title: 'باندل 3 برطمان + 12 زجاجة كولا',
-      amount: '3 برطمان سبريد + 12 زجاجة كولا',
+      title: 'باندل 3 + 12',
+      amount: '3 برطمان سبريد + 12 زجاجة كولا — 900 جنيه بدلاً من 1200',
       description: '',
       price: 900,
       originalPrice: 1200,
@@ -162,8 +162,8 @@ export const landingData = {
     },
     {
       id: 'bundle2',
-      title: 'باندل 2 برطمان + 6 زجاجات كولا',
-      amount: '2 برطمان سبريد + 6 زجاجات كولا',
+      title: 'باندل 2 + 6',
+      amount: '2 برطمان سبريد + 6 زجاجات كولا — 550 جنيه بدلاً من 750',
       description: '',
       price: 550,
       originalPrice: 750,
