@@ -1,50 +1,14 @@
-/**
- * metaPixel.js — Single source of truth for all Meta Pixel tracking.
- *
- * KEY CONCEPT: event_id deduplication
- * ────────────────────────────────────
- * When both the browser Pixel AND the server-side CAPI fire for the same
- * conversion (e.g. Purchase), Meta needs a shared `event_id` to merge
- * them into ONE counted event. In this codebase the `orderId` (e.g.
- * "HS-1720612345-A3F2K") IS the event_id — it is generated client-side,
- * sent to Apps Script, and echoed into the CAPI payload's `event_id`
- * field. The same orderId is passed as `eventID` in the browser
- * fbq('track', ...) call.
- *
- * DO NOT generate a separate event_id. orderId must stay identical
- * everywhere (Pixel option, CAPI payload, dedup sheet) for Meta's
- * deduplication to work.
- */
-
 const CURRENCY = 'EGP';
 const PIXEL_ID = '2211139682969128';
 
-// ---------------------------------------------------------------------------
-// Manual Advanced Matching (user data)
-// ---------------------------------------------------------------------------
-
-// Normalizes an Egyptian phone exactly like Apps Script does (google-apps-script.js)
-// so the browser pixel and the CAPI payload hash the SAME value.
-// "01012345678" -> "201012345678"
 function normalizePhone(raw) {
   let p = String(raw).replace(/[\s\-]/g, '');
   if (p.startsWith('0')) p = '2' + p;
   return p;
 }
 
-// Tracks the last user data we attached, to avoid redundant re-init calls
-// (each re-init prints a harmless "[Meta Pixel] - Duplicate Pixel ID" console
-// warning, so we only re-init when the data actually changes).
 let lastUserDataKey = '';
 
-/**
- * Derives Meta `fn`/`ln` from a single full-name field, conservatively.
- * The checkout collects one "name" input (اكتب اسمك الكامل), so Meta's
- * fn/ln are only derivable by splitting on whitespace. We never guess:
- * a single token (e.g. "محمد") yields NO fn/ln — only multi-token names
- * map first-token → fn and last-token → ln. If Meta hashes a wrong name,
- * the match simply fails (neutral), so this is safe to attempt.
- */
 function deriveNameParts(name) {
   if (!name) return {};
   const tokens = String(name).trim().split(/\s+/).filter(Boolean);
