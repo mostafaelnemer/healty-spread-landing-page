@@ -97,7 +97,7 @@ export const landingData = {
   offersIntro: {
     eyebrow: 'اختار العرض المناسب ليك 👇',
     title: 'الحق العروض قبل ما تخلص',
-    description: 'كل العروض شاملة الدفع عند الاستلام 💳 + التوصيل مجاناً 🚚',
+    description: 'كل العروض شاملة الدفع عند الاستلام 💳',
   },
   offers: [
     {
@@ -193,7 +193,7 @@ export const landingData = {
     title: 'بياناتك',
     subtitle: 'أدخل بياناتك وهنكلمك لتأكيد الطلب',
     submitLabel: 'تأكيد الطلب',
-    successMessage: 'تم تسجيل طلبك! سيتم التواصل معاك في أقرب وقت لتأكيد الطلب والتوصيل.',
+    successMessage: 'تم تسجيل طلبك! سيتم التواصل معاك في أقرب وقت لتأكيد الطلب.',
     validationMessage: 'من فضلك املأ كل الحقول المطلوبة بشكل صحيح.',
   },
   footer: {
@@ -201,6 +201,6 @@ export const landingData = {
   },
 };
 
-export const SHIPPING_FEE = 0; // free shipping
+export const SHIPPING_FEE = 0;
 
 export const formatPrice = (amount) => `${amount} جنيه`;

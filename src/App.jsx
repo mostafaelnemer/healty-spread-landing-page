@@ -33,8 +33,6 @@ function Header({ brand, nav }) {
   return (
     <>
       <div className="promo-bar">
-        <span>🚚 توصيل مجاناً</span>
-        <span>•</span>
         <span>Healthy Spread بدون سكر مضاف</span>
         <span>•</span>
         <CountdownTimer variant="bar" />
@@ -226,8 +224,8 @@ function PurchaseSuccess({ onBack }) {
             <div className="success-step">
               <span className="success-step-num">2</span>
               <div>
-                <strong>التجهيز والشحن</strong>
-                <p>بنجهز طلبك ونبعته مع أقرب شحنة</p>
+                <strong>تجهيز الطلب</strong>
+                <p>بنجهز طلبك بعناية في أسرع وقت</p>
               </div>
             </div>
             <div className="success-step">

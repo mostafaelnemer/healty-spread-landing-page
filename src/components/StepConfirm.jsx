@@ -11,7 +11,6 @@ import {
   spreadDistributionTotal,
   colaDistributionTotal,
   itemNeedsColaDistribution,
-  getItemsShipping,
 } from '../utils/cartState.js';
 import { trackPurchaseOnce, metaParamsFromItems, setAdvancedMatching } from '../utils/metaPixel.js';
 import {
@@ -137,8 +136,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
   const totalPrice    = items.reduce((sum, item) => sum + item.offer.price    * item.qty, 0);
   const totalOriginal = items.reduce((sum, item) => sum + item.offer.originalPrice * item.qty, 0);
   const totalSaving   = totalOriginal - totalPrice;
-  const shipping      = getItemsShipping(items);
-  const grandTotal    = totalPrice + shipping;
+  const grandTotal    = totalPrice;
   const flavorsOk = flavorsComplete(items, itemFlavors, itemCola);
 
   const errors = {
@@ -347,10 +345,6 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
           <div className="cart-total-row">
             <span>الاوردر</span>
             <span>{formatPrice(totalPrice)}</span>
-          </div>
-          <div className="cart-total-row">
-            <span>🚚 الشحن</span>
-            <span>{shipping > 0 ? formatPrice(shipping) : 'مجاناً'}</span>
           </div>
           <div className="cart-total-row cart-total-grand">
             <span>الإجمالي</span>

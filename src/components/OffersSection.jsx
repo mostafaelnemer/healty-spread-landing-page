@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { formatPrice, SHIPPING_FEE } from '../data/landingData.js';
+import { formatPrice } from '../data/landingData.js';
 import OfferImage from './OfferImage.jsx';
 import CountdownTimer from './CountdownTimer.jsx';
 import { preloadCheckout } from '../utils/preloadCheckout.js';
@@ -9,7 +9,6 @@ import {
   setCartItemQty,
   getCartCount,
   getCartSubtotal,
-  getGrandTotal,
   cartToCheckoutItems,
 } from '../utils/cartState.js';
 import { trackMetaEvent, metaParamsFromOffer, metaParamsFromItems } from '../utils/metaPixel.js';
@@ -20,7 +19,7 @@ export default function OffersSection({ intro, offers, onCheckout }) {
 
   const cartCount = getCartCount(cart);
   const subtotal = getCartSubtotal(cart, offers);
-  const grandTotal = getGrandTotal(cart, offers, SHIPPING_FEE);
+  const grandTotal = subtotal;
 
   useEffect(() => {
     offers.forEach((o) => loadOfferImage(o.id));
@@ -64,9 +63,6 @@ export default function OffersSection({ intro, offers, onCheckout }) {
               {cartCount === 1 ? 'منتج واحد في السلة' : `${cartCount} منتجات في السلة`}
             </span>
             <span className="offer-sticky-price">{formatPrice(grandTotal)}</span>
-            <span className="offer-sticky-shipping">
-              منتجات {formatPrice(subtotal)} + شحن مجاناً 🚚
-            </span>
           </div>
           <button
             type="button"
@@ -130,9 +126,9 @@ export default function OffersSection({ intro, offers, onCheckout }) {
                     <span className="saving-tag">وفر {formatPrice(offer.saving * displayQty)}</span>
                   </div>
                   {offer.configuration?.type === 'bundle' ? (
-                    <p className="bundle-row-shipping">🚚 توصيل مجاناً · ⚖️ 375 جرام لكل برطمان · 🥤 350 مل لكل زجاجة كولا</p>
+                    <p className="bundle-row-meta">⚖️ 375 جرام لكل برطمان · 🥤 350 مل لكل زجاجة كولا</p>
                   ) : (
-                    <p className="bundle-row-shipping">🚚 توصيل مجاناً · ⚖️ 375 جرام لكل برطمان</p>
+                    <p className="bundle-row-meta">⚖️ 375 جرام لكل برطمان</p>
                   )}
 
                   {inCart ? (
@@ -174,7 +170,6 @@ export default function OffersSection({ intro, offers, onCheckout }) {
         </div>
 
         <div className="trust-pills">
-          <span>🚚 توصيل مجاناً</span>
           <span>💳 الدفع عند الاستلام</span>
           <span>🌿 بدون سكر مضاف</span>
         </div>
@@ -185,10 +180,6 @@ export default function OffersSection({ intro, offers, onCheckout }) {
               <div className="checkout-summary-row">
                 <span>المنتجات ({cartCount})</span>
                 <span>{formatPrice(subtotal)}</span>
-              </div>
-              <div className="checkout-summary-row">
-                <span>🚚 الشحن</span>
-                <span>مجاناً</span>
               </div>
               <div className="checkout-summary-row checkout-summary-total">
                 <span>الإجمالي</span>

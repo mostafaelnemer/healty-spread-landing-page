@@ -842,12 +842,6 @@ h3 {
   color: var(--gold);
 }
 
-.offer-sticky-shipping {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.6);
-}
-
 .offer-sticky-cta {
   flex-shrink: 0;
   padding: 9px 20px;
@@ -1742,8 +1736,8 @@ h3 {
   font-size: 1.1rem;
 }
 
-/* ── Shipping note on offer card ── */
-.bundle-row-shipping {
+/* ── Meta note on offer card ── */
+.bundle-row-meta {
   margin: 4px 0 6px;
   color: #6b7280;
   font-size: 0.76rem;
