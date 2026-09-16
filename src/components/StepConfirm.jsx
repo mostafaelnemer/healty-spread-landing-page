@@ -18,6 +18,11 @@ import {
   resetOrderId,
   markOrderCompleted,
 } from '../utils/orderSession.js';
+import {
+  loadCheckoutDraft,
+  saveCheckoutCart,
+  saveCheckoutDraft,
+} from '../utils/checkoutSession.js';
 
 const ORDER_API_URL = 'https://script.google.com/macros/s/AKfycbwmCSkvnrX6Ow09kNwJXJoQvRSD-WPQvENWjsGIjSwiSewN40EjbxDmPT6P1A8kRPQl/exec';
 
@@ -31,6 +36,30 @@ function initialItemColaFlavors(items) {
       ? defaultColaFlavors(colaDistributionTotal(item))
       : null,
   );
+}
+
+function restoredItemFlavors(items, saved) {
+  if (!Array.isArray(saved) || saved.length !== items.length) {
+    return initialItemFlavors(items);
+  }
+  return saved.map((flavors) => (
+    flavors && typeof flavors === 'object'
+      ? { ...emptyFlavors(), ...flavors }
+      : { ...emptyFlavors() }
+  ));
+}
+
+function restoredItemColaFlavors(items, saved) {
+  if (!Array.isArray(saved) || saved.length !== items.length) {
+    return initialItemColaFlavors(items);
+  }
+  return items.map((item, index) => {
+    if (!itemNeedsColaDistribution(item)) return null;
+    const distribution = saved[index];
+    return distribution && typeof distribution === 'object'
+      ? distribution
+      : defaultColaFlavors(colaDistributionTotal(item));
+  });
 }
 
 export function describeFlavors(flavors) {
@@ -98,22 +127,27 @@ export { isOrderCompleted } from '../utils/orderSession.js';
 
 export default function StepConfirm({ form, cartItems: initialItems, onBack, onSuccess }) {
   const titleRef = useRef(null);
+  const [initialDraft] = useState(() => loadCheckoutDraft() || {});
   // orderId is stable for the entire checkout session. It's the primary
   // deduplication key — Apps Script will reject any duplicate submission.
   const orderIdRef = useRef(getOrCreateOrderId());
   const [items, setItems] = useState(initialItems);
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [gov, setGov] = useState('');
-  const [address, setAddress] = useState('');
-  const [notes, setNotes] = useState('');
+  const [name, setName] = useState(() => initialDraft.name || '');
+  const [phone, setPhone] = useState(() => initialDraft.phone || '');
+  const [gov, setGov] = useState(() => initialDraft.gov || '');
+  const [address, setAddress] = useState(() => initialDraft.address || '');
+  const [notes, setNotes] = useState(() => initialDraft.notes || '');
   const [submitState, setSubmitState] = useState('idle');
   const submitGuardRef = useRef(false);
   const abortControllerRef = useRef(null);
   const [touched, setTouched] = useState({});
   const [flavorTouched, setFlavorTouched] = useState(false);
-  const [itemFlavors, setItemFlavors] = useState(() => initialItemFlavors(initialItems));
-  const [itemCola, setItemCola] = useState(() => initialItemColaFlavors(initialItems));
+  const [itemFlavors, setItemFlavors] = useState(() => (
+    restoredItemFlavors(initialItems, initialDraft.itemFlavors)
+  ));
+  const [itemCola, setItemCola] = useState(() => (
+    restoredItemColaFlavors(initialItems, initialDraft.itemCola)
+  ));
 
   useEffect(() => {
     return () => {
@@ -130,6 +164,20 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
   useEffect(() => {
     titleRef.current?.focus();
   }, []);
+
+  // Keep the checkout intact across a page refresh in the same tab.
+  useEffect(() => {
+    saveCheckoutCart(items);
+    saveCheckoutDraft({
+      name,
+      phone,
+      gov,
+      address,
+      notes,
+      itemFlavors,
+      itemCola,
+    });
+  }, [items, name, phone, gov, address, notes, itemFlavors, itemCola]);
 
   if (items.length === 0) return null;
 
