@@ -212,6 +212,16 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
 
     if (submitGuardRef.current) return;
     submitGuardRef.current = true;
+    // Remount-proof guard: the ref above dies if the component remounts
+    // between two quick taps. sessionStorage survives remounts in the tab.
+    // Cleared below on genuine failure so legit retries still work.
+    const submitKey = `order_submit_started_${orderIdRef.current}`;
+    try {
+      if (sessionStorage.getItem(submitKey)) return;
+      sessionStorage.setItem(submitKey, '1');
+    } catch {
+    }
+    console.log('[Order] submit started', { orderId: orderIdRef.current });
     setSubmitState('sending');
 
     setAdvancedMatching({ ph: phone.trim(), name: name.trim() });
@@ -279,6 +289,11 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
         return;
       }
       console.error('Order submit failed:', err);
+      // Allow a genuine retry: clear both guards for this orderId only.
+      try {
+        sessionStorage.removeItem(`order_submit_started_${orderIdRef.current}`);
+      } catch {
+      }
       submitGuardRef.current = false;
       setSubmitState('idle');
     }

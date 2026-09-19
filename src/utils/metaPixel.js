@@ -44,7 +44,28 @@ export function trackMetaEvent(eventName, params = {}, eventID = null) {
   }
 }
 
-let lastPurchaseAt = 0;
+const LAST_PURCHASE_KEY = 'hs_last_purchase_at';
+const PURCHASE_THROTTLE_MS = 30000;
+
+// In-memory fallback (per-tab). localStorage below is the real guard.
+let lastPurchaseAtMem = 0;
+
+function readLastPurchaseAt() {
+  try {
+    const stored = Number(localStorage.getItem(LAST_PURCHASE_KEY));
+    if (Number.isFinite(stored) && stored > 0) return stored;
+  } catch {
+  }
+  return lastPurchaseAtMem;
+}
+
+function writeLastPurchaseAt(ts) {
+  lastPurchaseAtMem = ts;
+  try {
+    localStorage.setItem(LAST_PURCHASE_KEY, String(ts));
+  } catch {
+  }
+}
 
 export function trackPurchaseOnce(orderId, purchaseData) {
   const v = Number(purchaseData?.value);
@@ -56,9 +77,12 @@ export function trackPurchaseOnce(orderId, purchaseData) {
   }
 
   const now = Date.now();
-  if (now - lastPurchaseAt < 10000) {
+  // Cross-tab throttle: localStorage is shared across tabs of the same
+  // origin, unlike the old in-memory var. Skipping the PIXEL here never
+  // loses an order — the sheet + CAPI still run.
+  if (now - readLastPurchaseAt() < PURCHASE_THROTTLE_MS) {
     if (typeof window !== 'undefined') {
-      console.warn('[Meta Pixel] Purchase blocked: duplicate within 10s', orderId);
+      console.warn('[Meta Pixel] Purchase blocked: duplicate within 30s', orderId);
     }
     return false;
   }
@@ -73,9 +97,16 @@ export function trackPurchaseOnce(orderId, purchaseData) {
   } catch {
   }
 
-  lastPurchaseAt = now;
+  writeLastPurchaseAt(now);
 
   trackMetaEvent('Purchase', purchaseData, orderId);
+  if (typeof window !== 'undefined') {
+    console.log('[Meta Pixel] Purchase sent', {
+      value: purchaseData.value,
+      currency: purchaseData.currency,
+      eventID: orderId,
+    });
+  }
   return true;
 }
 
