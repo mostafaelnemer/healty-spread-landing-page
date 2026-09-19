@@ -103,8 +103,15 @@ function handleRequest(e) {
 
 function sendMetaPurchase(p, orderId, eventTime) {
   try {
-    // price is now sent as a clean numeric string (e.g. "199")
-    var value = parseFloat(p.price || '0') || 0;
+    // VALUE guard (Meta parity: numeric > 0, max 2 decimals).
+    // p.price arrives as a clean numeric string (e.g. "450") but may
+    // contain stray symbols in retries — strip everything except digits.
+    var rawValue = parseFloat(String(p.price || '0').replace(/[^0-9.\-]/g, ''));
+    var value = isNaN(rawValue) ? 0 : Math.round(rawValue * 100) / 100;
+    if (!(value > 0)) {
+      Logger.log('Meta CAPI skipped: invalid value for order ' + orderId + ' (price=' + p.price + ')');
+      return;
+    }
 
     var rawPhone = (p.phone || '').replace(/[\s\-]/g, '');
     if (rawPhone.startsWith('0')) rawPhone = '2' + rawPhone;
@@ -118,6 +125,13 @@ function sendMetaPurchase(p, orderId, eventTime) {
     if (p.fbp) userData.fbp = p.fbp;
     if (p.fbc) userData.fbc = p.fbc;
 
+    // contents[] mirrors the browser payload so Meta's price-quality check
+    // sees value + currency + item-level prices (fixes "1 parameter" flag).
+    var qty = parseInt(p.quantity, 10) || 1;
+    if (qty < 1) qty = 1;
+    var itemPrice = Math.round((value / qty) * 100) / 100;
+    var contentId = (p.bundle || 'offer').toString().slice(0, 100);
+
     var eventData = {
       data: [{
         event_name: 'Purchase',
@@ -130,6 +144,9 @@ function sendMetaPurchase(p, orderId, eventTime) {
           value: value,
           order_id: orderId,
           content_type: 'product',
+          content_ids: [contentId],
+          contents: [{ id: contentId, quantity: qty, item_price: itemPrice }],
+          num_items: qty,
         },
       }],
     };

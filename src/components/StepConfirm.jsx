@@ -252,7 +252,15 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       // with older deployments that don't send the flag.
       const shouldTrackPixel = response.shouldTrackPixel !== false;
       if (response.result === 'success' && shouldTrackPixel) {
-        trackPurchaseOnce(orderId, metaParamsFromItems(items, grandTotal));
+        // VALUE guard (Meta parity): never fire Purchase with missing/zero
+        // value — Meta flags those as "Value field is missing" and they
+        // poison the 78% price-quality diagnostic.
+        const safeTotal = Math.round(Number(grandTotal) * 100) / 100;
+        if (Number.isFinite(safeTotal) && safeTotal > 0) {
+          trackPurchaseOnce(orderId, metaParamsFromItems(items, safeTotal));
+        } else {
+          console.warn('[Meta Pixel] Purchase skipped: invalid grandTotal', grandTotal);
+        }
       }
 
       // Mark this order as completed so back-button navigation to

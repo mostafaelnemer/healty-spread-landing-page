@@ -118,34 +118,70 @@ export function trackMetaEvent(eventName, params = {}, eventID = null) {
 // Purchase-specific: fire-once guard
 // ---------------------------------------------------------------------------
 
+// Global time guard: blocks a second Purchase fired within seconds even
+// with a DIFFERENT orderId (covers the "2x Purchase on /add_to_cart"
+// case seen in Pixel Helper). Real users can't place 2 real orders
+// within 10s, so this is safe.
+let lastPurchaseAt = 0;
+
 /**
  * Fires the browser-side Purchase Pixel event exactly ONCE per orderId.
  *
  * Guard strategy (layered):
- *  1. sessionStorage flag keyed by orderId — survives component remount,
+ *  1. VALUE guard — never fire Purchase with missing/zero value. Meta
+ *     flags those as "Value field is missing" (78% diagnostic) and they
+ *     poison ROAS optimization.
+ *  2. sessionStorage flag keyed by orderId — survives component remount,
  *     page refresh within the same tab, and browser back-button.
- *  2. The flag is written SYNCHRONOUSLY before any async work, so even
+ *  3. The flag is written SYNCHRONOUSLY before any async work, so even
  *     a near-simultaneous second call (e.g. React re-render) is blocked.
+ *  4. Global 10s time guard — blocks a second Purchase even with a
+ *     different orderId (orderId rotation bug).
  *
  * @param {string} orderId   The order/event ID (shared with CAPI).
  * @param {Object} purchaseData  The content/value payload for fbq.
+ * @returns {boolean} true if fired, false if blocked.
  */
 export function trackPurchaseOnce(orderId, purchaseData) {
+  // ── 1. VALUE guard: Meta requires numeric value > 0.
+  const v = Number(purchaseData?.value);
+  if (!Number.isFinite(v) || v <= 0) {
+    if (typeof window !== 'undefined') {
+      console.warn('[Meta Pixel] Purchase blocked: missing/invalid value', purchaseData);
+    }
+    return false;
+  }
+
+  // ── 4. Global time guard (must run BEFORE writing per-order flag).
+  const now = Date.now();
+  if (now - lastPurchaseAt < 10000) {
+    if (typeof window !== 'undefined') {
+      console.warn('[Meta Pixel] Purchase blocked: duplicate within 10s', orderId);
+    }
+    return false;
+  }
+
   // ── event_id: orderId is reused here as the Pixel eventID so that
   // ── Meta can match this browser event with the CAPI event fired by
   // ── Apps Script, which also uses orderId as its event_id.
   const storageKey = `purchase_tracked_${orderId}`;
 
-  if (sessionStorage.getItem(storageKey)) {
-    // Already tracked for this orderId in this session — skip.
-    return;
+  try {
+    if (sessionStorage.getItem(storageKey)) {
+      // Already tracked for this orderId in this session — skip.
+      return false;
+    }
+    // Set flag IMMEDIATELY (sync) to block any concurrent / re-render call.
+    sessionStorage.setItem(storageKey, '1');
+  } catch {
+    // sessionStorage unavailable (private mode) — fall through to time guard.
   }
 
-  // Set flag IMMEDIATELY (sync) to block any concurrent / re-render call.
-  sessionStorage.setItem(storageKey, '1');
+  lastPurchaseAt = now;
 
   // Fire the Pixel event with the shared event_id (= orderId).
   trackMetaEvent('Purchase', purchaseData, orderId);
+  return true;
 }
 
 // ---------------------------------------------------------------------------
@@ -169,14 +205,33 @@ export function generateEventId() {
 // Payload helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * Coerce any input to a Meta-safe monetary value:
+ * finite number, rounded to 2 decimals. Returns 0 when invalid —
+ * callers must treat 0 as "do not fire" (Meta requires value > 0).
+ */
+export function toMetaValue(raw) {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return Math.round(n * 100) / 100;
+}
+
+function toMetaItemPrice(raw) {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return Math.round(n * 100) / 100;
+}
+
 export function metaParamsFromOffer(offer, qty = 1) {
+  const q = Math.max(1, parseInt(qty, 10) || 1);
+  const itemPrice = toMetaItemPrice(offer.price);
   return {
     content_ids: [offer.id],
     content_type: 'product',
     content_category: offer.categoryId || 'general',
-    contents: [{ id: offer.id, quantity: qty, item_price: offer.price }],
-    num_items: qty,
-    value: offer.price * qty,
+    contents: [{ id: offer.id, quantity: q, item_price: itemPrice }],
+    num_items: q,
+    value: toMetaValue(itemPrice * q),
     currency: CURRENCY,
   };
 }
@@ -185,19 +240,27 @@ function contentsFromItems(items) {
   return items.map((item) => ({
     id: item.offer.id,
     quantity: item.qty,
-    item_price: item.offer.price,
+    item_price: toMetaItemPrice(item.offer.price),
   }));
 }
 
 export function metaParamsFromItems(items, totalValue) {
   const categories = [...new Set(items.map((item) => item.offer.categoryId).filter(Boolean))];
+  const value = toMetaValue(totalValue);
+  // If the total is invalid, still return the shape but with value 0 —
+  // trackPurchaseOnce will refuse to fire it (Meta parity: value > 0).
+  if (!value) {
+    if (typeof window !== 'undefined') {
+      console.warn('[Meta Pixel] metaParamsFromItems: invalid totalValue', totalValue);
+    }
+  }
   return {
     content_ids: items.map((item) => item.offer.id),
     content_type: 'product',
     content_category: categories.length === 1 ? categories[0] : 'mixed',
     contents: contentsFromItems(items),
     num_items: items.reduce((sum, item) => sum + item.qty, 0),
-    value: totalValue,
+    value,
     currency: CURRENCY,
   };
 }
