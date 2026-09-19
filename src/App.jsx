@@ -279,10 +279,6 @@ export default function App() {
 
   const goToPurchase = () => {
     navigate('/purchase');
-    // Clear the cart AFTER navigation is triggered so the confirm screen
-    // doesn't flash empty before the route change takes effect.
-    // This also ensures that if the user back-buttons from /purchase to
-    // /add_to_cart, the empty-cart guard (line below) will redirect home.
     clearCheckoutSession();
     cartRef.current = [];
     setCartItems([]);
@@ -300,14 +296,8 @@ export default function App() {
   }
 
   if (route === '/add_to_cart') {
-    // Guard against back-button re-entry after a completed order.
-    // If the cart is empty (cleared by goToPurchase) OR the last session
-    // order was already completed, redirect home. This prevents
-    // re-submission of the same order while still allowing genuinely
-    // new orders (user adds new items → new orderId → no completed flag).
     const lastOrderId = sessionStorage.getItem(ORDER_ID_KEY);
     if (cartRef.current.length === 0 || (lastOrderId && isOrderCompleted(lastOrderId))) {
-      // Use navigate instead of showing null to ensure clean redirect
       if (route === '/add_to_cart') navigate('/');
       return null;
     }

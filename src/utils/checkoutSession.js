@@ -16,11 +16,6 @@ function readJson(key, storage) {
   }
 }
 
-/**
- * Store only stable offer IDs and quantities. Offer data is restored from
- * landingData after a refresh, so a deployment never leaves stale asset URLs
- * or prices inside the saved checkout.
- */
 export function saveCheckoutCart(items, storage = browserSessionStorage()) {
   if (!storage) return;
   const lines = items

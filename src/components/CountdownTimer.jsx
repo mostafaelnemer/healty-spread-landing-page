@@ -1,6 +1,5 @@
 import { memo, useEffect, useState } from 'react';
 
-// ── Daily countdown: resets to 24:00:00 every midnight ──
 function getNextMidnight(from) {
   const d = new Date(from);
   d.setHours(24, 0, 0, 0);

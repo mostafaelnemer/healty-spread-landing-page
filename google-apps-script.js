@@ -16,17 +16,12 @@ var HEADERS = [
   'السعر',
 ];
 
-// ── CORS preflight: browsers send OPTIONS before POST cross-origin.
-// Apps Script doesn't natively handle OPTIONS, so we return 200 immediately.
 function doOptions(e) {
   return ContentService
     .createTextOutput('')
     .setMimeType(ContentService.MimeType.TEXT);
 }
 
-// POST is the primary method (avoids the 302-redirect double-execution
-// that GET requests cause on Apps Script web apps).
-// GET is kept as a fallback for direct URL testing only.
 function doPost(e) { return handleRequest(e); }
 function doGet(e)  { return handleRequest(e); }
 
@@ -39,8 +34,6 @@ function handleRequest(e) {
   }
 
   try {
-    // ── Parse params: support both POST JSON body and GET URL params.
-    // POST body is preferred (no redirect issue). GET params are a fallback.
     var p = {};
     if (e.postData && e.postData.contents) {
       try {
@@ -54,12 +47,10 @@ function handleRequest(e) {
 
     var orderId = (p.orderId || '').trim();
 
-    // ── CRITICAL: reject requests with no orderId — they cannot be deduped.
     if (!orderId) {
       return jsonOutput({ result: 'error', error: 'Missing orderId' });
     }
 
-    // ── Dedup check (inside the lock, so it's race-condition safe).
     if (isDuplicate(orderId)) {
       Logger.log('Duplicate orderId rejected: ' + orderId);
       return jsonOutput({ result: 'duplicate', orderId: orderId, shouldTrackPixel: false });
@@ -103,9 +94,6 @@ function handleRequest(e) {
 
 function sendMetaPurchase(p, orderId, eventTime) {
   try {
-    // VALUE guard (Meta parity: numeric > 0, max 2 decimals).
-    // p.price arrives as a clean numeric string (e.g. "450") but may
-    // contain stray symbols in retries — strip everything except digits.
     var rawValue = parseFloat(String(p.price || '0').replace(/[^0-9.\-]/g, ''));
     var value = isNaN(rawValue) ? 0 : Math.round(rawValue * 100) / 100;
     if (!(value > 0)) {
@@ -116,17 +104,12 @@ function sendMetaPurchase(p, orderId, eventTime) {
     var rawPhone = (p.phone || '').replace(/[\s\-]/g, '');
     if (rawPhone.startsWith('0')) rawPhone = '2' + rawPhone;
 
-    // Build user_data — include fbp & fbc when provided by the browser.
-    // These cookies are essential for Meta to deduplicate this CAPI event
-    // against the browser Pixel event sharing the same event_id (orderId).
     var userData = {
       ph: [hashSHA256(rawPhone)],
     };
     if (p.fbp) userData.fbp = p.fbp;
     if (p.fbc) userData.fbc = p.fbc;
 
-    // contents[] mirrors the browser payload so Meta's price-quality check
-    // sees value + currency + item-level prices (fixes "1 parameter" flag).
     var qty = parseInt(p.quantity, 10) || 1;
     if (qty < 1) qty = 1;
     var itemPrice = Math.round((value / qty) * 100) / 100;
@@ -202,8 +185,6 @@ function isDuplicate(orderId) {
     }
   }
 
-  // Write to dedup sheet BEFORE returning — so if we crash after this
-  // but before appendRow, we don't write a duplicate on retry.
   dedup.appendRow([orderId, new Date().toISOString()]);
   return false;
 }

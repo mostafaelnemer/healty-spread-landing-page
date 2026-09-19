@@ -11,7 +11,6 @@ import product9 from '../assets/beanut_butter.webp';
 import bundleImg1 from '../assets/bundle/bundle.webp';
 import bundleImg2 from '../assets/bundle/bundle2.webp';
 
-/** Product shots in carousel / gallery order: أطفال، أوجينال، بروتين، فيجن، بريستيج، جوز هند، زبدة فول سوداني، زبدة فول سوداني عالي البروتين، زبدة فول سوداني شيكولاتة */
 export const productImages = [product4, product1, product2, product3, product6, product7, product5, product8, product9];
 
 export const spreadFlavors = [

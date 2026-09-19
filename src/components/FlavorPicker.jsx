@@ -4,7 +4,6 @@ import './FlavorPicker.css';
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
 const toArabic = (n) => n.toString().replace(/\d/g, (d) => ARABIC_DIGITS[d]);
 
-/** Flavors available for selection (hidden ones are temporarily removed). */
 const selectableFlavors = spreadFlavors.filter((f) => !f.hidden);
 
 export function emptyFlavors() {
@@ -15,14 +14,6 @@ function buildFlavorRecord(qtys) {
   return Object.fromEntries(spreadFlavors.map((f) => [f.id, qtys[f.id] ?? 0]));
 }
 
-/**
- * Props:
- *   total      — total units to distribute
- *   maxFlavors — max distinct flavors allowed
- *   flavors    — controlled { kids, original, protein, vegan }
- *   onChange   — (newFlavors) => void
- *   embedded   — omit outer card wrapper (used inside CartFlavors)
- */
 export default function FlavorPicker({
   total,
   maxFlavors = 4,

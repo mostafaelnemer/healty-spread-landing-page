@@ -1,4 +1,3 @@
-/* ── FlavorPicker & cart flavor panel ─────────────────────────────────────── */
 
 .fp-wrapper,
 .fp-cart-panel {
@@ -29,7 +28,6 @@
   border-top: 0;
 }
 
-/* ── Bundle configuration block (Spread + Cola panels) ────────────────────── */
 
 .fp-cart-line--bundle .bundle-config-panel {
   padding: 12px;
@@ -305,7 +303,6 @@
   color: var(--cocoa-900);
 }
 
-/* ── Collapsible cart lines (native <details>) ── */
 .fp-cart-line-title {
   margin: 0;
   padding: 2px 0;

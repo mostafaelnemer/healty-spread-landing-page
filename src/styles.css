@@ -350,7 +350,6 @@ h3 {
   filter: drop-shadow(0 16px 22px rgba(35, 18, 13, 0.14));
 }
 
-/* ── Hero Carousel ── */
 .hero-carousel {
   position: relative;
   width: min(100%, 520px);
@@ -507,7 +506,6 @@ h3 {
   scroll-margin-top: 80px;
 }
 
-/* Scroll reveal (IntersectionObserver in main.jsx) */
 .reveal {
   opacity: 0;
   transform: translateY(20px);
@@ -627,7 +625,6 @@ h3 {
   line-height: 1;
 }
 
-/* keep old ✓ span style for any leftover usage */
 .audience-card span:not(.audience-icon),
 .reason-card span:not(.reason-icon) {
   display: inline-grid;
@@ -773,7 +770,6 @@ h3 {
   box-shadow: 0 0 0 4px rgba(95, 45, 145, 0.1), 0 4px 20px rgba(0, 0, 0, 0.12);
 }
 
-/* card-selected: tap-to-select visual state */
 .bundle-row.card-selected {
   border-color: var(--accent, var(--purple-700));
   background: rgba(255, 255, 255, 0.98);
@@ -801,7 +797,6 @@ h3 {
   box-shadow: 0 2px 8px rgba(0,0,0,0.18);
 }
 
-/* ── Sticky selected-offer bar ── */
 .offer-sticky-bar {
   position: sticky;
   top: 0;
@@ -1093,7 +1088,6 @@ h3 {
   border-color: rgba(255, 255, 255, 0.3);
 }
 
-/* ── Countdown timer ── */
 .countdown-bar {
   display: inline-flex;
   align-items: center;
@@ -1153,7 +1147,6 @@ h3 {
   font-weight: 800;
 }
 
-/* ── Floating timer (bottom of screen) ── */
 .floating-timer {
   position: fixed;
   left: 50%;
@@ -1245,7 +1238,6 @@ h3 {
   }
 }
 
-/* ── Timer sound toggle ── */
 .timer-sound-btn {
   display: grid;
   place-items: center;
@@ -1283,7 +1275,6 @@ h3 {
   border-color: rgba(95, 45, 145, 0.25);
 }
 
-/* ── Weight badge (offers intro) ── */
 .weight-badge {
   display: inline-flex;
   align-items: center;
@@ -1696,7 +1687,6 @@ h3 {
   font-size: 1.3rem;
 }
 
-/* ── Checkout summary bar (in OffersSection) ── */
 .checkout-summary-bar {
   max-width: 480px;
   margin: 0 auto;
@@ -1736,7 +1726,6 @@ h3 {
   font-size: 1.1rem;
 }
 
-/* ── Meta note on offer card ── */
 .bundle-row-meta {
   margin: 4px 0 6px;
   color: #6b7280;
@@ -1901,7 +1890,6 @@ h3 {
   background: #f3f4f6;
 }
 
-/* flavor styles moved to FlavorPicker.css */
 
 .form-section {
   margin-top: 0;
@@ -2269,7 +2257,6 @@ h3 {
   }
 }
 
-/* ── /purchase success page ─────────────────────────────────────────────── */
 .success-msg {
   max-width: 400px;
   text-align: center;

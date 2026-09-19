@@ -69,13 +69,6 @@ export function describeFlavors(flavors) {
     .join(' + ');
 }
 
-/**
- * Validation gate before order submission. Every cart line must have its
- * required configuration fully distributed:
- *   - spread offers / bundle spread part: jars used === spread total
- *   - bundle cola part: bottles distributed === cola total
- * Totals are derived from the offer configuration × cart quantity.
- */
 export function flavorsComplete(items, itemFlavors, itemCola) {
   return items.every((item, i) => {
     if (offerNeedsFlavors(item.offer) || offerNeedsBundleConfig(item.offer)) {
@@ -92,11 +85,6 @@ export function flavorsComplete(items, itemFlavors, itemCola) {
   });
 }
 
-/**
- * Readable one-line summary of both spread and cola configurations per
- * cart line. Spread reuses describeFlavors; cola follows the existing
- * "(N كولا + M ليمون)" convention. Bundle lines combine both.
- */
 export function buildFlavorSummary(items, itemFlavors, itemCola) {
   return items
     .map((item, i) => {
@@ -120,16 +108,11 @@ export function buildFlavorSummary(items, itemFlavors, itemCola) {
     .join(' | ');
 }
 
-// Re-export isOrderCompleted from the shared session utility so that
-// App.jsx can import it without triggering a static load of this module.
-// (This module is also lazy-loaded; dual imports caused double submissions.)
 export { isOrderCompleted } from '../utils/orderSession.js';
 
 export default function StepConfirm({ form, cartItems: initialItems, onBack, onSuccess }) {
   const titleRef = useRef(null);
   const [initialDraft] = useState(() => loadCheckoutDraft() || {});
-  // orderId is stable for the entire checkout session. It's the primary
-  // deduplication key — Apps Script will reject any duplicate submission.
   const orderIdRef = useRef(getOrCreateOrderId());
   const [items, setItems] = useState(initialItems);
   const [name, setName] = useState(() => initialDraft.name || '');
@@ -165,7 +148,6 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
     titleRef.current?.focus();
   }, []);
 
-  // Keep the checkout intact across a page refresh in the same tab.
   useEffect(() => {
     saveCheckoutCart(items);
     saveCheckoutDraft({
@@ -228,16 +210,10 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       return;
     }
 
-    // Synchronous guard using ref — blocks duplicate submission instantly
     if (submitGuardRef.current) return;
     submitGuardRef.current = true;
     setSubmitState('sending');
 
-    // ── Manual Advanced Matching: attach the validated customer data
-    // ── (phone + name) to the Pixel BEFORE any event fires. fbq('init')
-    // ── with user data fires zero events, so this can never create a
-    // ── duplicate — it only enriches the upcoming Purchase with the same
-    // ── normalized phone the CAPI hashes.
     setAdvancedMatching({ ph: phone.trim(), name: name.trim() });
 
     if (abortControllerRef.current) {
@@ -247,10 +223,6 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
 
     const orderId = orderIdRef.current;
 
-    // Extract Meta's first-party cookies so the CAPI event can include
-    // them for proper server-side deduplication. Without fbp/fbc, Meta
-    // cannot reliably match the CAPI event to the browser Pixel event
-    // even when event_id is identical — resulting in 2 counted purchases.
     const getCookie = (name) => {
       const match = document.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]*)'));
       return match ? decodeURIComponent(match[1]) : '';
@@ -287,22 +259,8 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
         throw new Error(response.error || 'Order request failed');
       }
 
-      // ── event_id: Fire the browser Pixel Purchase event with orderId as
-      // ── the eventID. Apps Script already fired the CAPI event with the
-      // ── same orderId as event_id, so Meta will deduplicate them into
-      // ── one counted conversion. trackPurchaseOnce uses sessionStorage
-      // ── to guarantee this only fires once per orderId, even on remount.
-      //
-      // Honour the server's explicit shouldTrackPixel flag — Apps Script
-      // sets it to false when it detects a duplicate orderId, meaning the
-      // CAPI event was NOT re-fired and we must not fire the browser
-      // Pixel either. Falling back to true keeps backward-compatibility
-      // with older deployments that don't send the flag.
       const shouldTrackPixel = response.shouldTrackPixel !== false;
       if (response.result === 'success' && shouldTrackPixel) {
-        // VALUE guard (Meta parity): never fire Purchase with missing/zero
-        // value — Meta flags those as "Value field is missing" and they
-        // poison the 78% price-quality diagnostic.
         const safeTotal = Math.round(Number(grandTotal) * 100) / 100;
         if (Number.isFinite(safeTotal) && safeTotal > 0) {
           trackPurchaseOnce(orderId, metaParamsFromItems(items, safeTotal));
@@ -311,13 +269,8 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
         }
       }
 
-      // Mark this order as completed so back-button navigation to
-      // /add_to_cart can detect it and redirect home instead of showing
-      // the checkout form again.
       markOrderCompleted(orderId);
 
-      // Reset the session order ID so a future order (after going back
-      // home) gets a fresh ID.
       resetOrderId();
       setSubmitState('done');
       onSuccess();

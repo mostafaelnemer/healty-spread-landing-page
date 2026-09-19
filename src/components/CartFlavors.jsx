@@ -11,11 +11,6 @@ import ColaFlavorDist, { defaultColaFlavors } from './ColaFlavorDist.jsx';
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
 const toArabic = (n) => n.toString().replace(/\d/g, (d) => ARABIC_DIGITS[d]);
 
-/**
- * Bundle configuration block — the spread part reuses FlavorPicker and
- * the cola part reuses ColaFlavorDist, exactly as those components are
- * used by the standalone Spread / Cola offers.
- */
 function BundleConfig({
   item,
   index,

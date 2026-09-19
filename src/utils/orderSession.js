@@ -1,12 +1,3 @@
-/**
- * orderSession.js — Utilities for managing order session state.
- *
- * Separated from StepConfirm.jsx so that App.jsx can import only
- * isOrderCompleted without triggering a static import of the entire
- * StepConfirm module (which is also loaded via lazy()). Having the
- * same module loaded twice (static + lazy) caused double-execution
- * of order submission logic in some bundler configurations.
- */
 
 const ORDER_ID_KEY = 'hs_pending_order_id';
 const ORDER_COMPLETED_PREFIX = 'order_completed_';

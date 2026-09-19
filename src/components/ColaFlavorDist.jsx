@@ -4,36 +4,21 @@ import './ColaFlavorDist.css';
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
 const toArabic = (n) => n.toString().replace(/\d/g, (d) => ARABIC_DIGITS[d]);
 
-/** Empty cola distribution record. */
 export function emptyColaFlavors() {
   return { cola: 0, lemon: 0 };
 }
 
-/** Default distribution: نصف نصف (cola = floor(total / 2)). */
 export function defaultColaFlavors(total) {
   const cola = Math.floor(total / 2);
   return { cola, lemon: Math.max(0, total - cola) };
 }
 
-/** Cola distribution is always complete once cola + lemon == total. */
 export function colaDistributionComplete(total, flavors) {
   const cola = flavors?.cola ?? 0;
   const lemon = flavors?.lemon ?? 0;
   return cola + lemon === total;
 }
 
-/**
- * ColaFlavorDist — the original Healthy Cola flavor-distribution control,
- * ported into the shared checkout. The customer chooses how many bottles
- * are كولا vs ليمون نعناع within their pack (total = pack size × qty),
- * via quick presets (كله كولا / نص نص / كله ليمون) or +/- steppers.
- *
- * Props:
- *   total    — total bottles to distribute (pack units × qty)
- *   flavors  — controlled { cola, lemon }
- *   onChange — (newDistribution) => void
- *   embedded — omit outer card wrapper (used inside CartFlavors)
- */
 export default function ColaFlavorDist({
   total,
   flavors,

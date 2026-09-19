@@ -13,7 +13,6 @@ export default function LazyWhenVisible({ children, minHeight = 400, rootMargin 
       ([entry]) => {
         if (entry.isIntersecting) {
           setVisible(true);
-          // keep minHeight until content is rendered to avoid layout shift
           requestAnimationFrame(() => setRendered(true));
           observer.disconnect();
         }

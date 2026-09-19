@@ -20,7 +20,6 @@ export default defineConfig({
       },
     },
   },
-  // SPA fallback — redirect all routes to index.html
   server: {
     historyApiFallback: true,
   },

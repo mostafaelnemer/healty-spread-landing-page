@@ -1,50 +1,14 @@
-/**
- * metaPixel.js — Single source of truth for all Meta Pixel tracking.
- *
- * KEY CONCEPT: event_id deduplication
- * ────────────────────────────────────
- * When both the browser Pixel AND the server-side CAPI fire for the same
- * conversion (e.g. Purchase), Meta needs a shared `event_id` to merge
- * them into ONE counted event. In this codebase the `orderId` (e.g.
- * "HS-1720612345-A3F2K") IS the event_id — it is generated client-side,
- * sent to Apps Script, and echoed into the CAPI payload's `event_id`
- * field. The same orderId is passed as `eventID` in the browser
- * fbq('track', ...) call.
- *
- * DO NOT generate a separate event_id. orderId must stay identical
- * everywhere (Pixel option, CAPI payload, dedup sheet) for Meta's
- * deduplication to work.
- */
-
 const CURRENCY = 'EGP';
 const PIXEL_ID = '2211139682969128';
 
-// ---------------------------------------------------------------------------
-// Manual Advanced Matching (user data)
-// ---------------------------------------------------------------------------
-
-// Normalizes an Egyptian phone exactly like Apps Script does (google-apps-script.js)
-// so the browser pixel and the CAPI payload hash the SAME value.
-// "01012345678" -> "201012345678"
 function normalizePhone(raw) {
   let p = String(raw).replace(/[\s\-]/g, '');
   if (p.startsWith('0')) p = '2' + p;
   return p;
 }
 
-// Tracks the last user data we attached, to avoid redundant re-init calls
-// (each re-init prints a harmless "[Meta Pixel] - Duplicate Pixel ID" console
-// warning, so we only re-init when the data actually changes).
 let lastUserDataKey = '';
 
-/**
- * Derives Meta `fn`/`ln` from a single full-name field, conservatively.
- * The checkout collects one "name" input (اكتب اسمك الكامل), so Meta's
- * fn/ln are only derivable by splitting on whitespace. We never guess:
- * a single token (e.g. "محمد") yields NO fn/ln — only multi-token names
- * map first-token → fn and last-token → ln. If Meta hashes a wrong name,
- * the match simply fails (neutral), so this is safe to attempt.
- */
 function deriveNameParts(name) {
   if (!name) return {};
   const tokens = String(name).trim().split(/\s+/).filter(Boolean);
@@ -52,28 +16,6 @@ function deriveNameParts(name) {
   return { fn: tokens[0], ln: tokens[tokens.length - 1] };
 }
 
-/**
- * Attaches manual advanced matching data to the Pixel.
- *
- * Why this is safe (NO duplicates):
- *  - fbq('init', ...) only registers the pixel + attaches user identity.
- *  - It fires ZERO events, so re-calling it can never produce a duplicate
- *    Purchase/PageView on its own.
- *  - The user data is then carried by the NEXT tracked event — the single
- *    browser Purchase already guarded by trackPurchaseOnce (sessionStorage +
- *    success + shouldTrackPixel + shared event_id = orderId).
- *
- * Call this right before the Purchase event fires, once the checkout form
- * has validated user data (phone + name). The pixel hashes values (SHA-256)
- * automatically, so plain-text values are fine here.
- *
- * Supported fields (only what the checkout actually collects):
- *   ph   — Egyptian phone, normalized to E.164-style (20XXXXXXXXX).
- *   name — full name; fn/ln derived only when reliably splittable.
- *   em   — accepted for future use, but the checkout has no email field.
- *
- * @param {Object} userData  { ph, name, em } — at least one key.
- */
 export function setAdvancedMatching(userData = {}) {
   if (typeof window === 'undefined' || typeof window.fbq !== 'function') return;
 
@@ -95,55 +37,16 @@ export function setAdvancedMatching(userData = {}) {
   window.fbq('init', PIXEL_ID, data);
 }
 
-// ---------------------------------------------------------------------------
-// Core tracking helper
-// ---------------------------------------------------------------------------
-
-/**
- * Fires a browser-side Meta Pixel event.
- * @param {string}      eventName  e.g. 'Purchase', 'AddToCart'
- * @param {Object}      params     custom_data / content fields
- * @param {string|null} eventID    shared event_id for server dedup (orderId)
- */
 export function trackMetaEvent(eventName, params = {}, eventID = null) {
   if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
-    // When eventID is provided, Meta will use it to deduplicate this
-    // browser event against the matching CAPI event with the same event_id.
     const options = eventID ? { eventID } : {};
     window.fbq('track', eventName, params, options);
   }
 }
 
-// ---------------------------------------------------------------------------
-// Purchase-specific: fire-once guard
-// ---------------------------------------------------------------------------
-
-// Global time guard: blocks a second Purchase fired within seconds even
-// with a DIFFERENT orderId (covers the "2x Purchase on /add_to_cart"
-// case seen in Pixel Helper). Real users can't place 2 real orders
-// within 10s, so this is safe.
 let lastPurchaseAt = 0;
 
-/**
- * Fires the browser-side Purchase Pixel event exactly ONCE per orderId.
- *
- * Guard strategy (layered):
- *  1. VALUE guard — never fire Purchase with missing/zero value. Meta
- *     flags those as "Value field is missing" (78% diagnostic) and they
- *     poison ROAS optimization.
- *  2. sessionStorage flag keyed by orderId — survives component remount,
- *     page refresh within the same tab, and browser back-button.
- *  3. The flag is written SYNCHRONOUSLY before any async work, so even
- *     a near-simultaneous second call (e.g. React re-render) is blocked.
- *  4. Global 10s time guard — blocks a second Purchase even with a
- *     different orderId (orderId rotation bug).
- *
- * @param {string} orderId   The order/event ID (shared with CAPI).
- * @param {Object} purchaseData  The content/value payload for fbq.
- * @returns {boolean} true if fired, false if blocked.
- */
 export function trackPurchaseOnce(orderId, purchaseData) {
-  // ── 1. VALUE guard: Meta requires numeric value > 0.
   const v = Number(purchaseData?.value);
   if (!Number.isFinite(v) || v <= 0) {
     if (typeof window !== 'undefined') {
@@ -152,7 +55,6 @@ export function trackPurchaseOnce(orderId, purchaseData) {
     return false;
   }
 
-  // ── 4. Global time guard (must run BEFORE writing per-order flag).
   const now = Date.now();
   if (now - lastPurchaseAt < 10000) {
     if (typeof window !== 'undefined') {
@@ -161,55 +63,26 @@ export function trackPurchaseOnce(orderId, purchaseData) {
     return false;
   }
 
-  // ── event_id: orderId is reused here as the Pixel eventID so that
-  // ── Meta can match this browser event with the CAPI event fired by
-  // ── Apps Script, which also uses orderId as its event_id.
   const storageKey = `purchase_tracked_${orderId}`;
 
   try {
     if (sessionStorage.getItem(storageKey)) {
-      // Already tracked for this orderId in this session — skip.
       return false;
     }
-    // Set flag IMMEDIATELY (sync) to block any concurrent / re-render call.
     sessionStorage.setItem(storageKey, '1');
   } catch {
-    // sessionStorage unavailable (private mode) — fall through to time guard.
   }
 
   lastPurchaseAt = now;
 
-  // Fire the Pixel event with the shared event_id (= orderId).
   trackMetaEvent('Purchase', purchaseData, orderId);
   return true;
 }
 
-// ---------------------------------------------------------------------------
-// Event ID generation (informational)
-// ---------------------------------------------------------------------------
-
-/**
- * Generates a unique event ID. In practice, the codebase uses `orderId`
- * (generated in StepConfirm via getOrCreateOrderId) as the event_id for
- * both Pixel and CAPI, so this function is provided for completeness /
- * future use but is NOT called in the current Purchase flow.
- *
- * If you ever need a standalone event_id (e.g. for Lead or other events
- * that don't have a natural order ID), use this.
- */
 export function generateEventId() {
   return `evt-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-// ---------------------------------------------------------------------------
-// Payload helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Coerce any input to a Meta-safe monetary value:
- * finite number, rounded to 2 decimals. Returns 0 when invalid —
- * callers must treat 0 as "do not fire" (Meta requires value > 0).
- */
 export function toMetaValue(raw) {
   const n = Number(raw);
   if (!Number.isFinite(n) || n <= 0) return 0;
@@ -247,8 +120,6 @@ function contentsFromItems(items) {
 export function metaParamsFromItems(items, totalValue) {
   const categories = [...new Set(items.map((item) => item.offer.categoryId).filter(Boolean))];
   const value = toMetaValue(totalValue);
-  // If the total is invalid, still return the shape but with value 0 —
-  // trackPurchaseOnce will refuse to fire it (Meta parity: value > 0).
   if (!value) {
     if (typeof window !== 'undefined') {
       console.warn('[Meta Pixel] metaParamsFromItems: invalid totalValue', totalValue);
