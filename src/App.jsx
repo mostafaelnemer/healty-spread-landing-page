@@ -3,6 +3,12 @@ import { landingData } from './data/landingData.js';
 import OffersSection from './components/OffersSection.jsx';
 import CountdownTimer from './components/CountdownTimer.jsx';
 import { isOrderCompleted, ORDER_ID_KEY } from './utils/orderSession.js';
+import {
+  clearCheckoutDraft,
+  clearCheckoutSession,
+  loadCheckoutCart,
+  saveCheckoutCart,
+} from './utils/checkoutSession.js';
 
 const StepConfirm = lazy(() => import('./components/StepConfirm.jsx'));
 
@@ -247,7 +253,10 @@ function PurchaseSuccess({ onBack }) {
 
 export default function App() {
   const route = useRoute();
-  const cartRef = useRef([]);
+  const cartRef = useRef(null);
+  if (cartRef.current === null) {
+    cartRef.current = loadCheckoutCart(landingData.offers);
+  }
   const [, setCartItems] = useState([]);
 
   useLayoutEffect(() => {
@@ -261,6 +270,8 @@ export default function App() {
   }, [route]);
 
   const goToCart = (items) => {
+    clearCheckoutDraft();
+    saveCheckoutCart(items);
     cartRef.current = items;
     setCartItems(items);
     navigate('/add_to_cart');
@@ -272,11 +283,13 @@ export default function App() {
     // doesn't flash empty before the route change takes effect.
     // This also ensures that if the user back-buttons from /purchase to
     // /add_to_cart, the empty-cart guard (line below) will redirect home.
+    clearCheckoutSession();
     cartRef.current = [];
     setCartItems([]);
   };
 
   const goHome = () => {
+    clearCheckoutSession();
     cartRef.current = [];
     setCartItems([]);
     navigate('/');
