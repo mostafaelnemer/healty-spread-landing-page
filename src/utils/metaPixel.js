@@ -1,5 +1,29 @@
 const CURRENCY = 'EGP';
-const PIXEL_ID = '2211139682969128';
+// Production dataset. For local development, create a separate test dataset
+// in Events Manager and set VITE_META_PIXEL_ID in .env.development —
+// otherwise all tracking is disabled on localhost so dev traffic never
+// pollutes production (Meta support request).
+const ENV_PIXEL_ID =
+  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_META_PIXEL_ID) || '';
+const PIXEL_ID = ENV_PIXEL_ID || '2211139682969128';
+
+function isLocalDev() {
+  if (typeof window === 'undefined' || typeof window.location === 'undefined') return false;
+  const host = window.location.hostname || '';
+  return host === 'localhost' || host.startsWith('127.');
+}
+
+let devNoticeShown = false;
+function pixelEnabled() {
+  if (typeof window !== 'undefined' && isLocalDev() && !ENV_PIXEL_ID) {
+    if (!devNoticeShown) {
+      devNoticeShown = true;
+      console.info('[Meta Pixel] disabled on localhost (production dataset protected). Set VITE_META_PIXEL_ID to test locally.');
+    }
+    return false;
+  }
+  return true;
+}
 
 function normalizePhone(raw) {
   let p = String(raw).replace(/[\s\-]/g, '');
@@ -18,6 +42,7 @@ function deriveNameParts(name) {
 
 export function setAdvancedMatching(userData = {}) {
   if (typeof window === 'undefined' || typeof window.fbq !== 'function') return;
+  if (!pixelEnabled()) return;
 
   const data = {};
   if (userData.ph) data.ph = normalizePhone(userData.ph);
@@ -38,6 +63,7 @@ export function setAdvancedMatching(userData = {}) {
 }
 
 export function trackMetaEvent(eventName, params = {}, eventID = null) {
+  if (!pixelEnabled()) return;
   if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
     const options = eventID ? { eventID } : {};
     window.fbq('track', eventName, params, options);
@@ -68,6 +94,7 @@ function writeLastPurchaseAt(ts) {
 }
 
 export function trackPurchaseOnce(orderId, purchaseData) {
+  if (!pixelEnabled()) return false;
   const v = Number(purchaseData?.value);
   if (!Number.isFinite(v) || v <= 0) {
     if (typeof window !== 'undefined') {
