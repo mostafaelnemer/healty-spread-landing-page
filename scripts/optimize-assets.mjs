@@ -21,10 +21,23 @@ const images = [
   'beanut_butter.png', 'beanut_butter_high_protien.png', 'coconut.png', 'prestiege.png',
 ];
 
+// Offer/bundle art is displayed at ~90-96px, but sources are 1254px.
+// Cap them at 800px (still 8x the display size — retina-safe) to cut
+// page weight roughly in half with no visible difference.
+const LARGE_MAX_WIDTH = 800;
+const large = new Set([
+  '3ard.jpeg', '3ard2.jpeg', '3ard3.jpeg',
+  'bundle/bundle.jpeg', 'bundle/bundle2.jpeg',
+]);
+
 for (const file of images) {
   const input = join(assets, file);
   const out = join(assets, file.replace(/\.(png|jpe?g)$/i, '.webp'));
-  await sharp(input)
+  let pipe = sharp(input);
+  if (large.has(file)) {
+    pipe = pipe.resize({ width: LARGE_MAX_WIDTH, withoutEnlargement: true });
+  }
+  await pipe
     .webp({ quality: 82 })
     .toFile(out);
   console.log(`webp: ${basename(out)}`);

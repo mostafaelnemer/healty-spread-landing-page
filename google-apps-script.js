@@ -33,8 +33,13 @@ function handleRequest(e) {
     return jsonOutput({ result: 'error', error: 'Could not acquire lock' });
   }
 
+  // ── CHANGED: critical section is now ONLY check + reserve. The lock is
+  // ── released in `finally` below, so everything after it (sheet write +
+  // ── Meta CAPI call) runs lock-free and concurrent orders run in parallel
+  // ── instead of queueing behind each other's 1-5s CAPI round-trip.
+  var p = {};
+  var orderId = '';
   try {
-    var p = {};
     if (e.postData && e.postData.contents) {
       try {
         p = JSON.parse(e.postData.contents);
@@ -45,17 +50,32 @@ function handleRequest(e) {
       p = e.parameter || {};
     }
 
-    var orderId = (p.orderId || '').trim();
+    // CHANGED: String() hardening so a numeric orderId can't throw here
+    // (previously `.trim()` on a number threw straight to the error path).
+    orderId = String(p.orderId || '').trim();
 
     if (!orderId) {
       return jsonOutput({ result: 'error', error: 'Missing orderId' });
     }
 
+    // CHANGED: this is the ONLY duplicate logic and it is untouched —
+    // isDuplicate() atomically checks + appends the reservation while the
+    // lock is held, so the same orderId arriving the same millisecond is
+    // still rejected here, before any slow work starts.
     if (isDuplicate(orderId)) {
       Logger.log('Duplicate orderId rejected: ' + orderId);
       return jsonOutput({ result: 'duplicate', orderId: orderId, shouldTrackPixel: false });
     }
+  } finally {
+    // CHANGED: lock released HERE (was: held until the final response).
+    // Runs on every path above, including early returns and throws.
+    lock.releaseLock();
+  }
 
+  // ── CHANGED: slow section, deliberately lock-free from here on.
+  // appendRow is atomic per call and CAPI uses unique event_ids, so
+  // concurrent DIFFERENT orders are safe in parallel.
+  try {
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 
     if (sheet.getLastRow() === 0) {
@@ -86,9 +106,51 @@ function handleRequest(e) {
 
   } catch (err) {
     Logger.log('Error: ' + err.message);
+    // CHANGED: the orderId is already reserved in _dedup but the row was
+    // never written — release the reservation so a retry with the same
+    // orderId can proceed instead of being rejected as a "duplicate" ghost.
+    // (CAPI failures never reach here: sendMetaPurchase swallows its own
+    // errors internally, so reaching this branch means the SHEET write
+    // itself failed.)
+    removeReservation(orderId);
     return jsonOutput({ result: 'error', error: err.message });
-  } finally {
-    lock.releaseLock();
+  }
+}
+
+// CHANGED (new helper): deletes one orderId reservation from _dedup so a
+// failed attempt can be retried. Takes the lock itself for a few ms so the
+// find + delete is atomic against concurrent isDuplicate() scans.
+function removeReservation(orderId) {
+  if (!orderId) return;
+  try {
+    var lock = LockService.getScriptLock();
+    try {
+      lock.waitLock(5000);
+    } catch (lockErr) {
+      Logger.log('removeReservation: lock busy, keeping reservation for ' + orderId);
+      return;
+    }
+    try {
+      var dedup = getDedupSheet();
+      var lastRow = dedup.getLastRow();
+      if (lastRow === 0) return;
+      var startRow = Math.max(1, lastRow - 999);
+      var numRows  = lastRow - startRow + 1;
+      var values   = dedup.getRange(startRow, 1, numRows, 1).getValues();
+      // Scan from the end: our own reservation is the most recent match
+      // (orderIds are unique, so at most one row can match).
+      for (var i = numRows - 1; i >= 0; i--) {
+        if (String(values[i][0]).trim() === orderId) {
+          dedup.deleteRow(startRow + i);
+          Logger.log('removeReservation: released ' + orderId);
+          return;
+        }
+      }
+    } finally {
+      lock.releaseLock();
+    }
+  } catch (err) {
+    Logger.log('removeReservation error: ' + err.message);
   }
 }
 
