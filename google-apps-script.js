@@ -26,6 +26,24 @@ function doPost(e) { return handleRequest(e); }
 function doGet(e)  { return handleRequest(e); }
 
 function handleRequest(e) {
+  // Parse first: touches no shared state, needs no lock.
+  var p = {};
+  if (e.postData && e.postData.contents) {
+    try {
+      p = JSON.parse(e.postData.contents);
+    } catch (parseErr) {
+      p = e.parameter || {};
+    }
+  } else {
+    p = e.parameter || {};
+  }
+
+  var orderId = String(p.orderId || '').trim();
+
+  if (!orderId) {
+    return jsonOutput({ result: 'error', error: 'Missing orderId' });
+  }
+
   var lock = LockService.getScriptLock();
   try {
     lock.waitLock(10000);
@@ -33,42 +51,15 @@ function handleRequest(e) {
     return jsonOutput({ result: 'error', error: 'Could not acquire lock' });
   }
 
-  // ── CHANGED: critical section is now ONLY check + reserve. The lock is
-  // ── released in `finally` below, so everything after it (sheet write +
-  // ── Meta CAPI call) runs lock-free and concurrent orders run in parallel
-  // ── instead of queueing behind each other's 1-5s CAPI round-trip.
-  var p = {};
-  var orderId = '';
+  // Critical section is ONLY check + reserve (isDuplicate appends the
+  // reservation itself, untouched). Released immediately below so sheet
+  // writes run in parallel across different orders.
   try {
-    if (e.postData && e.postData.contents) {
-      try {
-        p = JSON.parse(e.postData.contents);
-      } catch (parseErr) {
-        p = e.parameter || {};
-      }
-    } else {
-      p = e.parameter || {};
-    }
-
-    // CHANGED: String() hardening so a numeric orderId can't throw here
-    // (previously `.trim()` on a number threw straight to the error path).
-    orderId = String(p.orderId || '').trim();
-
-    if (!orderId) {
-      return jsonOutput({ result: 'error', error: 'Missing orderId' });
-    }
-
-    // CHANGED: this is the ONLY duplicate logic and it is untouched —
-    // isDuplicate() atomically checks + appends the reservation while the
-    // lock is held, so the same orderId arriving the same millisecond is
-    // still rejected here, before any slow work starts.
     if (isDuplicate(orderId)) {
       Logger.log('Duplicate orderId rejected: ' + orderId);
       return jsonOutput({ result: 'duplicate', orderId: orderId, shouldTrackPixel: false });
     }
   } finally {
-    // CHANGED: lock released HERE (was: held until the final response).
-    // Runs on every path above, including early returns and throws.
     lock.releaseLock();
   }
 
@@ -100,6 +91,9 @@ function handleRequest(e) {
       p.price ? (p.price + ' جنيه') : '',
     ]);
 
+    // CAPI fires synchronously here (row + Meta event confirmed together).
+    // The browser does NOT wait for this response — it shows success
+    // instantly and verifies in the background (see StepConfirm.jsx).
     sendMetaPurchase(p, orderId, now);
 
     return jsonOutput({ result: 'success', orderId: orderId, eventId: orderId, shouldTrackPixel: true });
