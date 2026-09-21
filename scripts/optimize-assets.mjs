@@ -16,7 +16,8 @@ const publicDir = join(root, 'public');
 
 const images = [
   '1.png', '2.png', '3.png', '4.png', '5.png',
-  '3ard1.jpeg', '3ard2.jpeg', 'logo.png',
+  '3ard.jpeg', '3ard2.jpeg', '3ard3.jpeg', 'logo.png',
+  'bundle/bundle.jpeg', 'bundle/bundle2.jpeg',
   'beanut_butter.png', 'beanut_butter_high_protien.png', 'coconut.png', 'prestiege.png',
 ];
 

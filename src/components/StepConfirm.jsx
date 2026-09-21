@@ -121,6 +121,8 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
   const [address, setAddress] = useState(() => initialDraft.address || '');
   const [notes, setNotes] = useState(() => initialDraft.notes || '');
   const [submitState, setSubmitState] = useState('idle');
+  const [submitError, setSubmitError] = useState('');
+  const [slowSubmit, setSlowSubmit] = useState(false);
   const submitGuardRef = useRef(false);
   const abortControllerRef = useRef(null);
   const [touched, setTouched] = useState({});
@@ -139,6 +141,52 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       }
     };
   }, []);
+
+  // A previous submit attempt may have died with an older page (reload or
+  // tab close) leaving its sessionStorage flag behind. The orderId is stable
+  // per tab, so a flag for the CURRENT orderId at mount time is always
+  // stale — clear it so the button never appears dead.
+  useEffect(() => {
+    try {
+      sessionStorage.removeItem(`order_submit_started_${orderIdRef.current}`);
+    } catch {
+    }
+  }, []);
+
+  // Warm up the Apps Script instance while the user fills the form, so the
+  // real submit doesn't pay the cold-start cost (often 5-15s on first hit).
+  // Fire-and-forget: failures are silently ignored and never affect UX.
+  // The warm request carries no orderId, so the server answers a tiny fast
+  // error JSON without writing anything.
+  useEffect(() => {
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      if (cancelled) return;
+      try {
+        fetch(`${ORDER_API_URL}?warm=${Date.now()}`, {
+          method: 'GET',
+          mode: 'no-cors',
+          cache: 'no-store',
+        }).catch(() => {});
+      } catch {
+      }
+    }, 500);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, []);
+
+  // After ~6s of sending, switch the button copy so the user knows progress
+  // is happening instead of staring at a frozen spinner.
+  useEffect(() => {
+    if (submitState !== 'sending') {
+      setSlowSubmit(false);
+      return;
+    }
+    const timer = setTimeout(() => setSlowSubmit(true), 6000);
+    return () => clearTimeout(timer);
+  }, [submitState]);
 
   useEffect(() => {
     if (items.length === 0) onBack();
@@ -214,46 +262,69 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
     submitGuardRef.current = true;
     // Remount-proof guard: the ref above dies if the component remounts
     // between two quick taps. sessionStorage survives remounts in the tab.
-    // Cleared below on genuine failure so legit retries still work.
-    const submitKey = `order_submit_started_${orderIdRef.current}`;
+    // Cleared on genuine failure and on mount (stale flags), so legit
+    // retries always work.
+    const orderId = orderIdRef.current;
+    const submitKey = `order_submit_started_${orderId}`;
     try {
-      if (sessionStorage.getItem(submitKey)) return;
+      if (sessionStorage.getItem(submitKey)) {
+        // A previous attempt is still in flight elsewhere — never leave the
+        // user staring at a dead button.
+        submitGuardRef.current = false;
+        setSubmitError('الطلب بيتبعت بالفعل، استنى ثواني ولو متحلش اعمل refresh وحاول تاني.');
+        return;
+      }
       sessionStorage.setItem(submitKey, '1');
     } catch {
     }
-    console.log('[Order] submit started', { orderId: orderIdRef.current });
+    console.log('[Order] submit started', { orderId });
+    const t0 = Date.now();
+    setSubmitError('');
     setSubmitState('sending');
 
-    setAdvancedMatching({ ph: phone.trim(), name: name.trim() });
-
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    abortControllerRef.current = new AbortController();
-
-    const orderId = orderIdRef.current;
-
-    const getCookie = (name) => {
-      const match = document.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]*)'));
-      return match ? decodeURIComponent(match[1]) : '';
-    };
-
-    const payload = {
-      orderId,
-      name,
-      phone,
-      gov,
-      address,
-      notes: notes || '',
-      bundle: buildOfferSummary(),
-      flavors: buildFlavorSummary(items, itemFlavors, itemCola),
-      quantity: String(items.reduce((s, item) => s + (offerNeedsFlavors(item.offer) ? item.offer.unitsPerPack * item.qty : item.qty), 0)),
-      price: String(grandTotal),
-      fbp: getCookie('_fbp'),
-      fbc: getCookie('_fbc'),
-    };
-
+    // Everything below runs inside try/catch: ANY failure (payload crash,
+    // network hang, server error) must reset the button and show a message
+    // instead of spinning forever.
+    let timedOut = false;
+    let timeoutId = 0;
     try {
+      setAdvancedMatching({ ph: phone.trim(), name: name.trim() });
+
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+      // 25s ceiling: Apps Script cold starts are slow, but the request must
+      // never hang forever. On timeout the fetch aborts and lands in catch
+      // below as a retryable error (see `timedOut`).
+      timeoutId = setTimeout(() => {
+        timedOut = true;
+        try {
+          abortControllerRef.current.abort();
+        } catch {
+        }
+      }, 25000);
+
+      const getCookie = (name) => {
+        const match = document.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]*)'));
+        return match ? decodeURIComponent(match[1]) : '';
+      };
+
+      const payload = {
+        orderId,
+        name,
+        phone,
+        gov,
+        address,
+        notes: notes || '',
+        bundle: buildOfferSummary(),
+        flavors: buildFlavorSummary(items, itemFlavors, itemCola),
+        quantity: String(items.reduce((s, item) => s + (offerNeedsFlavors(item.offer) ? item.offer.unitsPerPack * item.qty : item.qty), 0)),
+        price: String(grandTotal),
+        fbp: getCookie('_fbp'),
+        fbc: getCookie('_fbc'),
+      };
+
       const orderResponse = await fetch(ORDER_API_URL, {
         method: 'POST',
         signal: abortControllerRef.current.signal,
@@ -262,6 +333,14 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       const response = await orderResponse.json();
 
       if (orderId !== orderIdRef.current || abortControllerRef.current.signal.aborted) {
+        // Superseded by a newer attempt or a navigation — release everything
+        // instead of leaving the button stuck on "sending".
+        try {
+          sessionStorage.removeItem(submitKey);
+        } catch {
+        }
+        submitGuardRef.current = false;
+        setSubmitState('idle');
         return;
       }
 
@@ -283,19 +362,32 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
 
       resetOrderId();
       setSubmitState('done');
+      console.log('[Order] submit finished', { orderId, ms: Date.now() - t0 });
       onSuccess();
     } catch (err) {
-      if (err.name === 'AbortError') {
+      // Unmount cleanup aborts are silent; a TIMEOUT abort is a real,
+      // retryable failure and must behave like one.
+      if (err && err.name === 'AbortError' && !timedOut) {
         return;
       }
       console.error('Order submit failed:', err);
+      console.log('[Order] submit failed', { orderId: orderIdRef.current, ms: Date.now() - t0 });
       // Allow a genuine retry: clear both guards for this orderId only.
       try {
-        sessionStorage.removeItem(`order_submit_started_${orderIdRef.current}`);
+        sessionStorage.removeItem(submitKey);
       } catch {
       }
       submitGuardRef.current = false;
       setSubmitState('idle');
+      setSubmitError(
+        timedOut
+          ? 'الطلب أخد وقت أطول من المعتاد (السيرفر مشغول)، دوس تأكيد الطلب تاني.'
+          : 'حصلت مشكلة أثناء تسجيل الطلب، اتأكد من الإنترنت ودوس تأكيد الطلب تاني.'
+      );
+    } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     }
   };
 
@@ -476,8 +568,15 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
         onClick={handleSubmit}
         disabled={submitState === 'sending' || submitState === 'done'}
       >
-        {submitState === 'sending' ? '⏳ جاري تسجيل الطلب…' : form.submitLabel}
+        {submitState === 'sending'
+          ? (slowSubmit ? '⏳ قربنا نخلص… جاري تأكيد طلبك' : '⏳ جاري تسجيل الطلب…')
+          : form.submitLabel}
       </button>
+      {submitError && (
+        <p className="field-msg error" role="alert" style={{ textAlign: 'center', marginTop: 12 }}>
+          {submitError}
+        </p>
+      )}
       <button type="button" className="back-btn" onClick={onBack}>
         رجوع
       </button>
