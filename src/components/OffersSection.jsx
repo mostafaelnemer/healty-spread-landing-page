@@ -127,6 +127,10 @@ export default function OffersSection({ intro, offers, onCheckout }) {
                   </div>
                   {offer.configuration?.type === 'bundle' ? (
                     <p className="bundle-row-meta">🚚 توصيل مجاناً · ⚖️ 375 جرام لكل برطمان · 🥤 350 مل لكل زجاجة كولا</p>
+                  ) : offer.configuration?.type === 'chocoBar' ? (
+                    <p className="bundle-row-meta">🚚 توصيل مجاناً · ⚖️ 40 جرام للقطعة</p>
+                  ) : offer.configuration?.type === 'spreadAndChocoBar' ? (
+                    <p className="bundle-row-meta">🚚 توصيل مجاناً · ⚖️ 375 جرام للسبريد · ⚖️ 40 جرام للشيكولاتة بار</p>
                   ) : (
                     <p className="bundle-row-meta">🚚 توصيل مجاناً · ⚖️ 375 جرام لكل برطمان</p>
                   )}
