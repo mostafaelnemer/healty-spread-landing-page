@@ -8,8 +8,6 @@ import product6 from '../assets/prestiege.webp';
 import product7 from '../assets/coconut.webp';
 import product8 from '../assets/beanut_butter_high_protien.webp';
 import product9 from '../assets/beanut_butter.webp';
-import bundleImg1 from '../assets/bundle/bundle.webp';
-import bundleImg2 from '../assets/bundle/bundle2.webp';
 
 export const productImages = [product4, product1, product2, product3, product6, product7, product5, product8, product9];
 
@@ -142,40 +140,30 @@ export const landingData = {
       note: '',
     },
     {
-      id: 'bundles',
-      title: 'باندل 1',
-      amount: '3 برطمان سبريد + 12 زجاجة كولا — 900 جنيه بدلاً من 1200',
+      id: 'choco-bar',
+      title: 'عرض شيكولاتة بار',
+      amount: 'اشتري 4 شيكولاتة 40 جرام واحصل على الخامسة هدية ب 220 جنيه بدلاً من 275 جنيه',
       description: '',
-      price: 900,
-      originalPrice: 1200,
-      saving: 300,
-      badge: '🔥 باندل مميز',
+      price: 220,
+      originalPrice: 275,
+      saving: 55,
+      badge: '🎁 الخامسة هدية',
       accent: '#b11730',
       note: '',
-      image: bundleImg1,
-      configuration: {
-        type: 'bundle',
-        spread: { unitsPerBundle: 3, maxFlavors: 9 },
-        cola: { unitsPerShrink: 12 },
-      },
     },
     {
-      id: 'bundle2',
-      title: 'باندل 2',
-      amount: '2 برطمان سبريد + 6 زجاجات كولا — 550 جنيه بدلاً من 750',
+      id: 'spread-choco-bar',
+      title: 'عرض سبريد + شيكولاتة بار',
+      amount: 'اشتري 2 شيكولاتة سبريد + 2 شيكولاتة بار ب 599 جنيه',
       description: '',
-      price: 550,
+      price: 599,
       originalPrice: 750,
-      saving: 200,
-      badge: '✨ اختيار مثالي',
-      accent: '#0f766e',
+      saving: 151,
+      unitsPerPack: 2,
+      maxFlavors: 9,
+      badge: '✨ عرض مميز',
+      accent: '#5f2d91',
       note: '',
-      image: bundleImg2,
-      configuration: {
-        type: 'bundle',
-        spread: { unitsPerBundle: 2, maxFlavors: 9 },
-        cola: { unitsPerShrink: 6 },
-      },
     },
   ],
   loveReasons: {

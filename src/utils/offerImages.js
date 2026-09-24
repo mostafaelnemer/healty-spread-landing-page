@@ -1,9 +1,8 @@
 const loaders = {
-  'two-jars':   () => import('../assets/3ard.webp'),
-  'three-jars': () => import('../assets/3ard2.webp'),
-  'four-jars':  () => import('../assets/3ard3.webp'),
-  'bundles':    () => import('../assets/bundle/bundle.webp'),
-  'bundle2':    () => import('../assets/bundle/bundle2.webp'),
+  'two-jars':         () => import('../assets/3ard.webp'),
+  'three-jars':       () => import('../assets/3ard2.webp'),
+  'four-jars':        () => import('../assets/3ard3.webp'),
+  'spread-choco-bar': () => import('../assets/3ard.webp'),
 };
 
 const cache = new Map();
