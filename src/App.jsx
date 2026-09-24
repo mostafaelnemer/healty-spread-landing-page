@@ -39,6 +39,8 @@ function Header({ brand, nav }) {
   return (
     <>
       <div className="promo-bar">
+        <span>🚚 توصيل مجاناً</span>
+        <span>•</span>
         <span>Healthy Spread بدون سكر مضاف</span>
         <span>•</span>
         <CountdownTimer variant="bar" />

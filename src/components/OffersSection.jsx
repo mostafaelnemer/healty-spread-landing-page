@@ -126,9 +126,9 @@ export default function OffersSection({ intro, offers, onCheckout }) {
                     <span className="saving-tag">وفر {formatPrice(offer.saving * displayQty)}</span>
                   </div>
                   {offer.configuration?.type === 'bundle' ? (
-                    <p className="bundle-row-meta">⚖️ 375 جرام لكل برطمان · 🥤 350 مل لكل زجاجة كولا</p>
+                    <p className="bundle-row-meta">🚚 توصيل مجاناً · ⚖️ 375 جرام لكل برطمان · 🥤 350 مل لكل زجاجة كولا</p>
                   ) : (
-                    <p className="bundle-row-meta">⚖️ 375 جرام لكل برطمان</p>
+                    <p className="bundle-row-meta">🚚 توصيل مجاناً · ⚖️ 375 جرام لكل برطمان</p>
                   )}
 
                   {inCart ? (
@@ -170,6 +170,7 @@ export default function OffersSection({ intro, offers, onCheckout }) {
         </div>
 
         <div className="trust-pills">
+          <span>🚚 توصيل مجاناً</span>
           <span>💳 الدفع عند الاستلام</span>
           <span>🌿 بدون سكر مضاف</span>
         </div>
@@ -180,6 +181,10 @@ export default function OffersSection({ intro, offers, onCheckout }) {
               <div className="checkout-summary-row">
                 <span>المنتجات ({cartCount})</span>
                 <span>{formatPrice(subtotal)}</span>
+              </div>
+              <div className="checkout-summary-row">
+                <span>🚚 الشحن</span>
+                <span>مجاناً</span>
               </div>
               <div className="checkout-summary-row checkout-summary-total">
                 <span>الإجمالي</span>

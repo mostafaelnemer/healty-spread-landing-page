@@ -471,6 +471,10 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
             <span>الاوردر</span>
             <span>{formatPrice(totalPrice)}</span>
           </div>
+          <div className="cart-total-row">
+            <span>🚚 الشحن</span>
+            <span>مجاناً</span>
+          </div>
           <div className="cart-total-row cart-total-grand">
             <span>الإجمالي</span>
             <strong>{formatPrice(grandTotal)}</strong>
