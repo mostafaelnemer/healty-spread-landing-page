@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { egyptGovs, formatPrice, spreadFlavors } from '../data/landingData.js';
+import { egyptGovs, formatPrice, spreadFlavors, chocoBarFlavors } from '../data/landingData.js';
 import { emptyFlavors } from './FlavorPicker.jsx';
+import { emptyChocoBarFlavors } from './ChocoBarPicker.jsx';
 import { defaultColaFlavors } from './ColaFlavorDist.jsx';
 import CartFlavors from './CartFlavors.jsx';
 import OfferImage from './OfferImage.jsx';
@@ -8,6 +9,8 @@ import {
   offerNeedsFlavors,
   offerNeedsColaConfig,
   offerNeedsBundleConfig,
+  offerNeedsChocoBarConfig,
+  offerNeedsSpreadAndChocoBarConfig,
   spreadDistributionTotal,
   colaDistributionTotal,
   itemNeedsColaDistribution,
@@ -34,6 +37,14 @@ function initialItemColaFlavors(items) {
   return items.map((item) =>
     itemNeedsColaDistribution(item)
       ? defaultColaFlavors(colaDistributionTotal(item))
+      : null,
+  );
+}
+
+function initialItemChocoBarFlavors(items) {
+  return items.map((item) =>
+    offerNeedsChocoBarConfig(item.offer) || offerNeedsSpreadAndChocoBarConfig(item.offer)
+      ? emptyChocoBarFlavors()
       : null,
   );
 }
@@ -69,9 +80,9 @@ export function describeFlavors(flavors) {
     .join(' + ');
 }
 
-export function flavorsComplete(items, itemFlavors, itemCola) {
+export function flavorsComplete(items, itemFlavors, itemCola, itemChocoBar) {
   return items.every((item, i) => {
-    if (offerNeedsFlavors(item.offer) || offerNeedsBundleConfig(item.offer)) {
+    if (offerNeedsFlavors(item.offer) || offerNeedsBundleConfig(item.offer) || offerNeedsSpreadAndChocoBarConfig(item.offer)) {
       const total = spreadDistributionTotal(item);
       const used = spreadFlavors.reduce((s, f) => s + (itemFlavors[i][f.id] ?? 0), 0);
       if (used !== total) return false;
@@ -81,11 +92,21 @@ export function flavorsComplete(items, itemFlavors, itemCola) {
       const dist = itemCola[i];
       if ((dist?.cola ?? 0) + (dist?.lemon ?? 0) !== total) return false;
     }
+    if (offerNeedsChocoBarConfig(item.offer)) {
+      const total = item.offer.configuration.total * item.qty;
+      const used = chocoBarFlavors.reduce((s, f) => s + (itemChocoBar?.[i]?.[f.id] ?? 0), 0);
+      if (used !== total) return false;
+    }
+    if (offerNeedsSpreadAndChocoBarConfig(item.offer)) {
+      const total = item.offer.configuration.chocoBarUnits * item.qty;
+      const used = chocoBarFlavors.reduce((s, f) => s + (itemChocoBar?.[i]?.[f.id] ?? 0), 0);
+      if (used !== total) return false;
+    }
     return true;
   });
 }
 
-export function buildFlavorSummary(items, itemFlavors, itemCola) {
+export function buildFlavorSummary(items, itemFlavors, itemCola, itemChocoBar) {
   return items
     .map((item, i) => {
       if (offerNeedsBundleConfig(item.offer)) {
@@ -94,6 +115,21 @@ export function buildFlavorSummary(items, itemFlavors, itemCola) {
         const cola = itemCola[i]?.cola ?? 0;
         const lemon = Math.max(0, total - cola);
         return `${item.offer.title} ×${item.qty} (سبريد: ${spreadDesc} | كولا: ${cola} كولا + ${lemon} ليمون نعناع)`;
+      }
+      if (offerNeedsSpreadAndChocoBarConfig(item.offer)) {
+        const spreadDesc = describeFlavors(itemFlavors[i]);
+        const chocoDesc = chocoBarFlavors
+          .filter((f) => (itemChocoBar?.[i]?.[f.id] ?? 0) > 0)
+          .map((f) => `${itemChocoBar[i][f.id]} ${f.shortLabel}`)
+          .join(' + ');
+        return `${item.offer.title} ×${item.qty} (سبريد: ${spreadDesc} | بار: ${chocoDesc})`;
+      }
+      if (offerNeedsChocoBarConfig(item.offer)) {
+        const chocoDesc = chocoBarFlavors
+          .filter((f) => (itemChocoBar?.[i]?.[f.id] ?? 0) > 0)
+          .map((f) => `${itemChocoBar[i][f.id]} ${f.shortLabel}`)
+          .join(' + ');
+        return `${item.offer.title} ×${item.qty} (${chocoDesc})`;
       }
       if (offerNeedsFlavors(item.offer)) return describeFlavors(itemFlavors[i]);
       if (offerNeedsColaConfig(item.offer)) {
@@ -130,6 +166,9 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
   ));
   const [itemCola, setItemCola] = useState(() => (
     restoredItemColaFlavors(initialItems, initialDraft.itemCola)
+  ));
+  const [itemChocoBar, setItemChocoBar] = useState(() => (
+    initialItemChocoBarFlavors(initialItems)
   ));
 
   // A previous submit attempt may have died with an older page (reload or
@@ -194,7 +233,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
   const totalOriginal = items.reduce((sum, item) => sum + item.offer.originalPrice * item.qty, 0);
   const totalSaving   = totalOriginal - totalPrice;
   const grandTotal    = totalPrice;
-  const flavorsOk = flavorsComplete(items, itemFlavors, itemCola);
+  const flavorsOk = flavorsComplete(items, itemFlavors, itemCola, itemChocoBar);
 
   const errors = {
     name: !name.trim() ? 'الاسم مطلوب' : '',
@@ -217,6 +256,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
     setItems((prev) => prev.filter((_, i) => i !== index));
     setItemFlavors((prev) => prev.filter((_, i) => i !== index));
     setItemCola((prev) => prev.filter((_, i) => i !== index));
+    setItemChocoBar((prev) => prev.filter((_, i) => i !== index));
   };
 
   const buildOfferSummary = () =>
@@ -284,7 +324,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
         address,
         notes: notes || '',
         bundle: buildOfferSummary(),
-        flavors: buildFlavorSummary(items, itemFlavors, itemCola),
+        flavors: buildFlavorSummary(items, itemFlavors, itemCola, itemChocoBar),
         quantity: String(items.reduce((s, item) => s + (offerNeedsFlavors(item.offer) ? item.offer.unitsPerPack * item.qty : item.qty), 0)),
         price: String(grandTotal),
         fbp: getCookie('_fbp'),
@@ -417,6 +457,8 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
           onItemFlavorsChange={setItemFlavors}
           itemCola={itemCola}
           onItemColaChange={setItemCola}
+          itemChocoBar={itemChocoBar}
+          onItemChocoBarChange={setItemChocoBar}
         />
         {flavorTouched && !flavorsOk && (
           <p className="field-msg error fp-flavor-error">من فضلك وزّع كل البرطمانات على النكهات</p>

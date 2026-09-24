@@ -8,6 +8,12 @@ import product6 from '../assets/prestiege.webp';
 import product7 from '../assets/coconut.webp';
 import product8 from '../assets/beanut_butter_high_protien.webp';
 import product9 from '../assets/beanut_butter.webp';
+import chocoDarkHazel  from '../assets/choco-dark-hazel.jpeg';
+import chocoDarkAlmond from '../assets/choco-dark-almond.jpeg';
+import chocoDarkPlain  from '../assets/choco-dark-plain.jpeg';
+import chocoMilkHazel  from '../assets/choco-milk-hazel.jpeg';
+import chocoMilkAlmond from '../assets/choco-milk-almond.jpeg';
+import chocoMilkPlain  from '../assets/choco-milk-plain.jpeg';
 
 export const productImages = [product4, product1, product2, product3, product6, product7, product5, product8, product9];
 
@@ -21,6 +27,15 @@ export const spreadFlavors = [
   { id: 'peanut',  label: 'زبدة فول سوداني 375 جرام',         shortLabel: 'زبدة فول سوداني', emoji: '🥜', weight: '375 جرام', hidden: true, image: product5 },
   { id: 'highProtein', label: 'زبدة فول سوداني عالي البروتين 375 جرام', shortLabel: 'زبدة فول سوداني عالي البروتين', emoji: '💪', weight: '375 جرام', hidden: true, image: product8 },
   { id: 'chocolatePeanut', label: 'زبدة فول سوداني شيكولاتة 375 جرام', shortLabel: 'زبدة فول سوداني شيكولاتة', emoji: '🍫', weight: '375 جرام', hidden: true, image: product9 },
+];
+
+export const chocoBarFlavors = [
+  { id: 'darkHazel',  label: 'شيكولاتة بار دارك بالبندق 40 جرام',  shortLabel: 'دارك بالبندق',  emoji: '🍫', weight: '40 جرام', image: chocoDarkHazel },
+  { id: 'darkAlmond', label: 'شيكولاتة بار دارك باللوز 40 جرام',   shortLabel: 'دارك باللوز',   emoji: '🍫', weight: '40 جرام', image: chocoDarkAlmond },
+  { id: 'darkPlain',  label: 'شيكولاتة بار دارك سادة 40 جرام',     shortLabel: 'دارك سادة',     emoji: '🍫', weight: '40 جرام', image: chocoDarkPlain },
+  { id: 'milkHazel',  label: 'شيكولاتة بار ميلك بالبندق 40 جرام',  shortLabel: 'ميلك بالبندق',  emoji: '🍫', weight: '40 جرام', image: chocoMilkHazel },
+  { id: 'milkAlmond', label: 'شيكولاتة بار ميلك باللوز 40 جرام',   shortLabel: 'ميلك باللوز',   emoji: '🍫', weight: '40 جرام', image: chocoMilkAlmond },
+  { id: 'milkPlain',  label: 'شيكولاتة بار ميلك سادة 40 جرام',     shortLabel: 'ميلك سادة',     emoji: '🍫', weight: '40 جرام', image: chocoMilkPlain },
 ];
 
 export const heroImages = productImages;
@@ -150,6 +165,7 @@ export const landingData = {
       badge: '🎁 الخامسة هدية',
       accent: '#b11730',
       note: '',
+      configuration: { type: 'chocoBar', total: 5 },
     },
     {
       id: 'spread-choco-bar',
@@ -164,6 +180,7 @@ export const landingData = {
       badge: '✨ عرض مميز',
       accent: '#5f2d91',
       note: '',
+      configuration: { type: 'spreadAndChocoBar', spreadUnits: 2, chocoBarUnits: 2 },
     },
   ],
   loveReasons: {

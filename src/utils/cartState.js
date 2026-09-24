@@ -47,12 +47,22 @@ export function offerNeedsColaConfig(offer) {
 export function offerNeedsFlavors(offer) {
   return (
     offer?.configuration?.type === 'flavors' ||
-    (Number.isFinite(offer?.unitsPerPack) && offer.unitsPerPack > 0)
+    (Number.isFinite(offer?.unitsPerPack) && offer.unitsPerPack > 0 &&
+      offer?.configuration?.type !== 'chocoBar' &&
+      offer?.configuration?.type !== 'spreadAndChocoBar')
   );
 }
 
 export function offerNeedsBundleConfig(offer) {
   return offer?.configuration?.type === 'bundle';
+}
+
+export function offerNeedsChocoBarConfig(offer) {
+  return offer?.configuration?.type === 'chocoBar';
+}
+
+export function offerNeedsSpreadAndChocoBarConfig(offer) {
+  return offer?.configuration?.type === 'spreadAndChocoBar';
 }
 
 export function bundleSpreadUnits(offer) {

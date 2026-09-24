@@ -2,11 +2,14 @@ import {
   offerNeedsFlavors,
   offerNeedsColaConfig,
   offerNeedsBundleConfig,
+  offerNeedsChocoBarConfig,
+  offerNeedsSpreadAndChocoBarConfig,
   spreadDistributionTotal,
   colaDistributionTotal,
 } from '../utils/cartState.js';
 import FlavorPicker from './FlavorPicker.jsx';
 import ColaFlavorDist, { defaultColaFlavors } from './ColaFlavorDist.jsx';
+import ChocoBarPicker, { emptyChocoBarFlavors } from './ChocoBarPicker.jsx';
 
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
 const toArabic = (n) => n.toString().replace(/\d/g, (d) => ARABIC_DIGITS[d]);
@@ -77,11 +80,17 @@ export default function CartFlavors({
   onItemFlavorsChange,
   itemCola,
   onItemColaChange,
+  itemChocoBar,
+  onItemChocoBarChange,
 }) {
   if (items.length === 0) return null;
 
   const needsConfig = (item) =>
-    offerNeedsFlavors(item.offer) || offerNeedsColaConfig(item.offer) || offerNeedsBundleConfig(item.offer);
+    offerNeedsFlavors(item.offer) ||
+    offerNeedsColaConfig(item.offer) ||
+    offerNeedsBundleConfig(item.offer) ||
+    offerNeedsChocoBarConfig(item.offer) ||
+    offerNeedsSpreadAndChocoBarConfig(item.offer);
   if (!items.some(needsConfig)) return null;
 
   return (
@@ -149,6 +158,76 @@ export default function CartFlavors({
                     onItemColaChange((prev) => prev.map((x, idx) => (idx === i ? { ...f } : x)))
                   }
                 />
+              </div>
+            </details>
+          );
+        }
+
+        if (offerNeedsChocoBarConfig(item.offer)) {
+          const chocoTotal = item.offer.configuration.total * item.qty;
+          return (
+            <details key={`${item.offer.id}-${i}`} className="fp-cart-line" open>
+              <summary className="fp-cart-line-title">
+                {item.offer.title}
+                {item.qty > 1 ? ` × ${item.qty}` : ''}
+                <span className="fp-cart-line-toggle" aria-hidden="true">▾</span>
+              </summary>
+              <div className="fp-cart-line-body">
+                <ChocoBarPicker
+                  embedded
+                  total={chocoTotal}
+                  flavors={itemChocoBar?.[i] ?? emptyChocoBarFlavors()}
+                  onChange={(f) =>
+                    onItemChocoBarChange((prev) => prev.map((x, idx) => (idx === i ? { ...f } : x)))
+                  }
+                />
+              </div>
+            </details>
+          );
+        }
+
+        if (offerNeedsSpreadAndChocoBarConfig(item.offer)) {
+          const spreadTotal = item.offer.configuration.spreadUnits * item.qty;
+          const chocoTotal  = item.offer.configuration.chocoBarUnits * item.qty;
+          return (
+            <details key={`${item.offer.id}-${i}`} className="fp-cart-line fp-cart-line--bundle" open>
+              <summary className="fp-cart-line-title">
+                {item.offer.title}
+                {item.qty > 1 ? ` × ${item.qty}` : ''}
+                <span className="fp-cart-line-toggle" aria-hidden="true">▾</span>
+              </summary>
+              <div className="fp-cart-line-body">
+                <div className="bundle-config-panel">
+                  <div className="bundle-config-header">
+                    <span className="bundle-config-num" aria-hidden="true">🍫</span>
+                    <p className="bundle-config-title">اختار نكهات الـ {spreadTotal} برطمان سبريد</p>
+                    <span className="bundle-config-count">Healthy Spread</span>
+                  </div>
+                  <FlavorPicker
+                    embedded
+                    total={spreadTotal}
+                    maxFlavors={item.offer.maxFlavors ?? 9}
+                    flavors={itemFlavors[i]}
+                    onChange={(f) =>
+                      onItemFlavorsChange((prev) => prev.map((x, idx) => (idx === i ? { ...f } : x)))
+                    }
+                  />
+                </div>
+                <div className="bundle-config-panel">
+                  <div className="bundle-config-header">
+                    <span className="bundle-config-num" aria-hidden="true">🍫</span>
+                    <p className="bundle-config-title">اختار نكهات الـ {chocoTotal} شيكولاتة بار</p>
+                    <span className="bundle-config-count">Choco Bar</span>
+                  </div>
+                  <ChocoBarPicker
+                    embedded
+                    total={chocoTotal}
+                    flavors={itemChocoBar?.[i] ?? emptyChocoBarFlavors()}
+                    onChange={(f) =>
+                      onItemChocoBarChange((prev) => prev.map((x, idx) => (idx === i ? { ...f } : x)))
+                    }
+                  />
+                </div>
               </div>
             </details>
           );
