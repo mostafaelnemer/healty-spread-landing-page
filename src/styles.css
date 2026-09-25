@@ -771,13 +771,32 @@ h3 {
 
 /* ── Choco bar offer card subtle distinction ── */
 .bundle-row--choco {
-  background: linear-gradient(135deg, #fff8f0 0%, #fff 60%);
-  border-color: rgba(177, 23, 48, 0.18);
+  background: linear-gradient(135deg, #fdf6ee 0%, #fff 70%);
+  border-color: rgba(124, 61, 18, 0.25);
+  border-width: 2px;
+}
+
+.bundle-row--choco .bundle-row-badge {
+  background: #7c3d12;
+  color: #fff9f0;
+}
+
+.bundle-row--choco h3 {
+  color: #7c3d12;
+}
+
+.bundle-row--choco .bundle-row-amount {
+  color: #92400e;
+}
+
+.bundle-row--choco .bundle-row-meta {
+  color: #a16207;
 }
 
 .bundle-row--choco.selected {
-  border-color: #b11730;
-  background: rgba(177, 23, 48, 0.04);
+  border-color: #7c3d12;
+  background: linear-gradient(135deg, #fef3e2 0%, #fff8f0 70%);
+  box-shadow: 0 0 0 4px rgba(124, 61, 18, 0.12), 0 4px 20px rgba(124, 61, 18, 0.15);
 }
 
 .bundle-row {
