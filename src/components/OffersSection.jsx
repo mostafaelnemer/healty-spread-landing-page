@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { formatPrice } from '../data/landingData.js';
 import OfferImage from './OfferImage.jsx';
 import CountdownTimer from './CountdownTimer.jsx';
@@ -86,15 +87,29 @@ export default function OffersSection({ intro, offers, onCheckout }) {
         </div>
 
         <div className="bundle-list">
-          {offers.map((offer) => {
+          {offers.map((offer, index) => {
             const qty = cart[offer.id] || 0;
             const inCart = qty > 0;
             const displayQty = Math.max(qty, 1);
+            const isChocoOffer =
+              offer.configuration?.type === 'chocoBar' ||
+              offer.configuration?.type === 'spreadAndChocoBar';
+            const prevOffer = offers[index - 1];
+            const isFirstChoco =
+              isChocoOffer &&
+              prevOffer?.configuration?.type !== 'chocoBar' &&
+              prevOffer?.configuration?.type !== 'spreadAndChocoBar';
 
             return (
+              <React.Fragment key={offer.id}>
+                {isFirstChoco && (
+                  <div className="offers-divider">
+                    <span>أو جرب الجديد 🍫</span>
+                  </div>
+                )}
               <article
                 key={offer.id}
-                className={`bundle-row${inCart ? ' selected' : ''}`}
+                className={`bundle-row${inCart ? ' selected' : ''}${isChocoOffer ? ' bundle-row--choco' : ''}`}
                 style={{ '--accent': offer.accent }}
                 onClick={() => addOfferToCart(offer.id)}
                 role="button"
@@ -168,6 +183,7 @@ export default function OffersSection({ intro, offers, onCheckout }) {
                   )}
                 </div>
               </article>
+              </React.Fragment>
             );
           })}
         </div>

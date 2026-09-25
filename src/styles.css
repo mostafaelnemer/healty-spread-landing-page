@@ -750,6 +750,36 @@ h3 {
   padding: 0 16px;
 }
 
+/* ── Divider between spread and choco bar offers ── */
+.offers-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0 4px;
+  color: #6b7280;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.offers-divider::before,
+.offers-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+/* ── Choco bar offer card subtle distinction ── */
+.bundle-row--choco {
+  background: linear-gradient(135deg, #fff8f0 0%, #fff 60%);
+  border-color: rgba(177, 23, 48, 0.18);
+}
+
+.bundle-row--choco.selected {
+  border-color: #b11730;
+  background: rgba(177, 23, 48, 0.04);
+}
+
 .bundle-row {
   display: flex;
   align-items: center;
