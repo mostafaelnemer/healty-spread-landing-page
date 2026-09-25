@@ -170,7 +170,7 @@ export const landingData = {
     {
       id: 'spread-choco-bar',
       title: 'عرض سبريد + شيكولاتة بار',
-      amount: 'اشتري 2 شيكولاتة سبريد + 2 شيكولاتة بار ب 599 جنيه',
+      amount: 'اشتري 2 شيكولاتة سبريد + 2 شيكولاتة بار ب 599 جنيه بدلاً من 750 جنيه',
       description: '',
       price: 599,
       originalPrice: 750,
