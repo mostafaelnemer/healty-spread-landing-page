@@ -88,7 +88,7 @@ export default function OffersSection({ intro, offers, onCheckout }) {
 
         <a href="#choco-offers" className="choco-teaser-banner">
           <span className="choco-teaser-new">جديد 🆕</span>
-          <span className="choco-teaser-text">🍫 شيكولاتة بار 40 جرام — اشتري 4 واحصل على الخامسة هدية · سبريد + بار ب 599 بدل 750 جنيه</span>
+          <span className="choco-teaser-text">🍫 شيكولاتة بار 40 جرام — اشتري 4 واحصل على الخامسة هدية · سبريد + بار ب 599 بدل 710 جنيه</span>
           <span className="choco-teaser-arrow">↓</span>
         </a>
 
