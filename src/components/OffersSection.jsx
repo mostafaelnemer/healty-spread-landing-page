@@ -78,13 +78,6 @@ export default function OffersSection({ intro, offers, onCheckout }) {
       )}
 
       <section className="section offers-section" id="offers">
-        <div className="section-intro light centered">
-          <span className="eyebrow">{intro.eyebrow}</span>
-          <h2>{intro.title}</h2>
-          <p>{intro.description}</p>
-          <span className="weight-badge">⚖️ كل العبوات 375 جرام</span>
-          <CountdownTimer />
-        </div>
 
         <div className="bundle-list">
           {offers.map((offer) => {
