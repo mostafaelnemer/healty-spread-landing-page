@@ -769,6 +769,54 @@ h3 {
   background: #e5e7eb;
 }
 
+/* ── Choco bar teaser banner ── */
+.choco-teaser-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 640px;
+  margin: 0 auto 8px;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, #7c3d12 0%, #92400e 100%);
+  color: #fff9f0;
+  text-decoration: none;
+  font-size: 0.83rem;
+  font-weight: 700;
+  box-shadow: 0 2px 12px rgba(124, 61, 18, 0.25);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.choco-teaser-banner:hover {
+  box-shadow: 0 4px 20px rgba(124, 61, 18, 0.35);
+  transform: translateY(-1px);
+}
+
+.choco-teaser-new {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 50px;
+  background: #fef3c7;
+  color: #7c3d12;
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.choco-teaser-text {
+  flex: 1;
+}
+
+.choco-teaser-arrow {
+  flex-shrink: 0;
+  font-size: 1rem;
+  animation: bounceDown 1.2s ease infinite;
+}
+
+@keyframes bounceDown {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(4px); }
+}
+
 /* ── Choco bar offer card subtle distinction ── */
 .bundle-row--choco {
   background: linear-gradient(135deg, #fdf6ee 0%, #fff 70%);

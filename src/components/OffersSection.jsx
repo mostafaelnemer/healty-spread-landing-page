@@ -86,6 +86,12 @@ export default function OffersSection({ intro, offers, onCheckout }) {
           <CountdownTimer />
         </div>
 
+        <a href="#choco-offers" className="choco-teaser-banner">
+          <span className="choco-teaser-new">جديد 🆕</span>
+          <span className="choco-teaser-text">🍫 شيكولاتة بار 40 جرام — اشتري 4 واحصل على الخامسة هدية</span>
+          <span className="choco-teaser-arrow">↓</span>
+        </a>
+
         <div className="bundle-list">
           {offers.map((offer, index) => {
             const qty = cart[offer.id] || 0;
@@ -103,7 +109,7 @@ export default function OffersSection({ intro, offers, onCheckout }) {
             return (
               <React.Fragment key={offer.id}>
                 {isFirstChoco && (
-                  <div className="offers-divider">
+                  <div className="offers-divider" id="choco-offers">
                     <span>أو جرب الجديد 🍫</span>
                   </div>
                 )}
