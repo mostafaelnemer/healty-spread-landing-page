@@ -19,8 +19,8 @@ const images = [
   '3ard.jpeg', '3ard2.jpeg', '3ard3.jpeg', 'logo.png',
   'bundle/bundle.jpeg', 'bundle/bundle2.jpeg',
   'beanut_butter.png', 'beanut_butter_high_protien.png', 'coconut.png', 'prestiege.png',
-  'Almond Chocolate.png', 'ChocolateBar with almond.png', 'ChocolateBar with Hazelnut.png',
-  'Hazelnut Chocolate.png', 'milk chocolate bar.png', 'Stevia DarkChocolate.png',
+  'bar-dark-almond.png', 'bar-dark-hazel.png', 'bar-dark-plain.png',
+  'bar-milk-almond.png', 'bar-milk-hazel.png', 'bar-milk-plain.png',
 ];
 
 // Offer/bundle art is displayed at ~90-96px, but sources are 1254px.
@@ -30,6 +30,8 @@ const LARGE_MAX_WIDTH = 800;
 const large = new Set([
   '3ard.jpeg', '3ard2.jpeg', '3ard3.jpeg',
   'bundle/bundle.jpeg', 'bundle/bundle2.jpeg',
+  'bar-dark-almond.png', 'bar-dark-hazel.png', 'bar-dark-plain.png',
+  'bar-milk-almond.png', 'bar-milk-hazel.png', 'bar-milk-plain.png',
 ]);
 
 for (const file of images) {

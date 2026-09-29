@@ -14,32 +14,32 @@ import chocoDarkPlain  from '../assets/choco-dark-plain.jpeg';
 import chocoMilkHazel  from '../assets/choco-milk-hazel.jpeg';
 import chocoMilkAlmond from '../assets/choco-milk-almond.jpeg';
 import chocoMilkPlain  from '../assets/choco-milk-plain.jpeg';
-import barHazelnutChoc from '../assets/Hazelnut Chocolate.webp';
-import barAlmondChoc from '../assets/Almond Chocolate.webp';
-import barChocoHazelnut from '../assets/ChocolateBar with Hazelnut.webp';
-import barChocoAlmond from '../assets/ChocolateBar with almond.webp';
-import barMilk from '../assets/milk chocolate bar.webp';
-import barSteviaDark from '../assets/Stevia DarkChocolate.webp';
+import barDarkAlmond from '../assets/bar-dark-almond.webp';
+import barDarkHazel from '../assets/bar-dark-hazel.webp';
+import barDarkPlain from '../assets/bar-dark-plain.webp';
+import barMilkAlmond from '../assets/bar-milk-almond.webp';
+import barMilkHazel from '../assets/bar-milk-hazel.webp';
+import barMilkPlain from '../assets/bar-milk-plain.webp';
 
 export const productImages = [product4, product1, product2, product3, product6, product7, product5, product8, product9];
 
 // Hero carousel: spread ↔ choco bar alternating so the page speaks for both
 export const heroImages = [
-  product1, barHazelnutChoc,
-  product4, barMilk,
-  product2, barSteviaDark,
-  product3, barAlmondChoc,
-  product6, barChocoHazelnut,
-  barChocoAlmond,
+  product1, barMilkHazel,
+  product4, barMilkPlain,
+  product2, barDarkPlain,
+  product3, barMilkAlmond,
+  product6, barDarkHazel,
+  barDarkAlmond,
 ];
 
 export const heroImageLabels = [
-  'أوجينال', 'شيكولاتة بالبندق',
+  'أوجينال', 'ميلك بالبندق',
   'أطفال', 'ميلك شيكولاتة بار',
   'بروتين', 'ستيفيا دارك',
   'فيجن', 'شيكولاتة باللوز',
-  'بريستيج 👑 (بندق أكتر)', 'شيكولاتة بار بالبندق',
-  'شيكولاتة بار باللوز',
+  'بريستيج 👑 (بندق أكتر)', 'دارك بالبندق',
+  'دارك باللوز',
 ];
 
 export const spreadFlavors = [
