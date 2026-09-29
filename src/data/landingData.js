@@ -14,8 +14,33 @@ import chocoDarkPlain  from '../assets/choco-dark-plain.jpeg';
 import chocoMilkHazel  from '../assets/choco-milk-hazel.jpeg';
 import chocoMilkAlmond from '../assets/choco-milk-almond.jpeg';
 import chocoMilkPlain  from '../assets/choco-milk-plain.jpeg';
+import barHazelnutChoc from '../assets/Hazelnut Chocolate.webp';
+import barAlmondChoc from '../assets/Almond Chocolate.webp';
+import barChocoHazelnut from '../assets/ChocolateBar with Hazelnut.webp';
+import barChocoAlmond from '../assets/ChocolateBar with almond.webp';
+import barMilk from '../assets/milk chocolate bar.webp';
+import barSteviaDark from '../assets/Stevia DarkChocolate.webp';
 
 export const productImages = [product4, product1, product2, product3, product6, product7, product5, product8, product9];
+
+// Hero carousel: spread ↔ choco bar alternating so the page speaks for both
+export const heroImages = [
+  product1, barHazelnutChoc,
+  product4, barMilk,
+  product2, barSteviaDark,
+  product3, barAlmondChoc,
+  product6, barChocoHazelnut,
+  barChocoAlmond,
+];
+
+export const heroImageLabels = [
+  'أوجينال', 'شيكولاتة بالبندق',
+  'أطفال', 'ميلك شيكولاتة بار',
+  'بروتين', 'ستيفيا دارك',
+  'فيجن', 'شيكولاتة باللوز',
+  'بريستيج 👑 (بندق أكتر)', 'شيكولاتة بار بالبندق',
+  'شيكولاتة بار باللوز',
+];
 
 export const spreadFlavors = [
   { id: 'kids',    label: 'سبريد شيكولاتة أطفال 375 جرام',   shortLabel: 'أطفال',          emoji: '🧒', weight: '375 جرام', image: product4 },
@@ -38,8 +63,6 @@ export const chocoBarFlavors = [
   { id: 'milkPlain',  label: 'شيكولاتة بار ميلك سادة 40 جرام',     shortLabel: 'ميلك سادة',     emoji: '🍫', weight: '40 جرام', image: chocoMilkPlain },
 ];
 
-export const heroImages = productImages;
-
 export const colaFlavors = [
   { id: 'cola',  label: 'كولا 350 مل',        shortLabel: 'كولا',        emoji: '🥤', volume: '350 مل' },
   { id: 'lemon', label: 'ليمون نعناع 350 مل', shortLabel: 'ليمون نعناع', emoji: '🍋', volume: '350 مل' },
@@ -59,13 +82,14 @@ export const landingData = {
     { label: 'اطلب الآن', href: '#offers'  },
   ],
   hero: {
-    eyebrow: 'Healthy Spread',
-    title: 'استمتع بـ Healthy Spread اللي بتحبها... بطريقة تناسب حياتك الصحية',
+    eyebrow: 'Healthy Spread & Choco Bar 🍫',
+    title: 'استمتع بـ هيلثي سبريد وشيكولاتة بار اللي بتحبهم... بطريقة تناسب حياتك الصحية',
     subtitle:
-      'طعم غني ولذيذ من غير سكر مضاف، مناسب لنظامك الصحي من غير ما تحرم نفسك.',
+      'سبريد غني وشيكولاتة بار لذيذة من غير سكر مضاف، مناسبين للدايت والكيتو ومرضى السكر من غير ما تحرم نفسك.',
     primaryCta: 'اطلب دلوقتي',
     secondaryCta: 'شوف العروض',
     images: heroImages,
+    labels: heroImageLabels,
     stats: [
       { value: '0%', label: 'سكر مضاف' },
       { value: 'Keto', label: 'مناسب للدايت' },

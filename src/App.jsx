@@ -104,7 +104,7 @@ function Hero({ hero }) {
     };
   }, []);
 
-  const flavorLabels = ['أطفال', 'أوجينال', 'بروتين', 'فيجن', 'بريستيج', 'جوز هند', 'زبدة فول سوداني', 'زبدة فول سوداني عالي البروتين', 'زبدة فول سوداني شيكولاتة'];
+  const flavorLabels = hero.labels || ['أطفال', 'أوجينال', 'بروتين', 'فيجن', 'بريستيج', 'جوز هند', 'زبدة فول سوداني', 'زبدة فول سوداني عالي البروتين', 'زبدة فول سوداني شيكولاتة'];
 
   return (
     <section className="hero" id="top">
@@ -137,7 +137,7 @@ function Hero({ hero }) {
             <img
               key={`hero-slide-${i}`}
               src={src}
-              alt={`Healthy Spread - ${flavorLabels[i] || i + 1}`}
+              alt={`Healthy & Tasty - ${flavorLabels[i] || i + 1}`}
               decoding="async"
               fetchPriority={i === 0 ? 'high' : 'auto'}
               loading="eager"
