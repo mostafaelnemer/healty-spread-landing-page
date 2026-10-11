@@ -8,18 +8,18 @@ import { loadOfferImage } from '../utils/offerImages.js';
 import {
   incrementCartItem,
   setCartItemQty,
-  getCartCount,
   getCartSubtotal,
   cartToCheckoutItems,
 } from '../utils/cartState.js';
 import { trackMetaEvent, metaParamsFromOffer, metaParamsFromItems } from '../utils/metaPixel.js';
 
-export default function OffersSection({ intro, offers, onCheckout }) {
+export default function OffersSection({ intro, offers, offersReady, onCheckout }) {
   const [cart, setCart] = useState({});
   const checkoutGuardRef = useRef(false);
 
-  const cartCount = getCartCount(cart);
-  const subtotal = getCartSubtotal(cart, offers);
+  const availableOffers = offers.filter(o => o.flavorsAvailable !== false);
+  const cartCount = availableOffers.reduce((sum, offer) => sum + (cart[offer.id] || 0), 0);
+  const subtotal = getCartSubtotal(cart, availableOffers);
   const grandTotal = subtotal;
 
   useEffect(() => {
@@ -27,6 +27,7 @@ export default function OffersSection({ intro, offers, onCheckout }) {
   }, [offers]);
 
   const addOfferToCart = (offerId) => {
+    if (!availableOffers.some(o => o.id === offerId)) return;
     preloadCheckout();
     setCart((c) => {
       const isFirstAdd = !c[offerId];
@@ -39,12 +40,14 @@ export default function OffersSection({ intro, offers, onCheckout }) {
   };
 
   const changeQty = (offerId, val) => {
+    if (!availableOffers.some(o => o.id === offerId)) return;
     setCart((c) => setCartItemQty(c, offerId, val));
   };
 
   const handleCheckout = () => {
+    if (!offersReady) return;
     if (checkoutGuardRef.current) return;
-    const items = cartToCheckoutItems(cart, offers);
+    const items = cartToCheckoutItems(cart, availableOffers);
     if (items.length === 0) return;
     checkoutGuardRef.current = true;
     trackMetaEvent('InitiateCheckout', metaParamsFromItems(items, grandTotal));
@@ -68,6 +71,7 @@ export default function OffersSection({ intro, offers, onCheckout }) {
           <button
             type="button"
             className="offer-sticky-cta"
+            disabled={!offersReady}
             onClick={handleCheckout}
             onMouseEnter={warmCheckout}
             onFocus={warmCheckout}
@@ -86,15 +90,16 @@ export default function OffersSection({ intro, offers, onCheckout }) {
           <CountdownTimer />
         </div>
 
-        <a href="#choco-offers" className="choco-teaser-banner">
+        {offers.some(offer => ['chocoBar', 'spreadAndChocoBar'].includes(offer.configuration?.type)) && <a href="#choco-offers" className="choco-teaser-banner">
           <span className="choco-teaser-new">جديد 🆕</span>
           <span className="choco-teaser-text">🍫 شيكولاتة بار 40 جرام — اشتري 4 واحصل على الخامسة هدية · سبريد + بار ب 599 بدل 710 جنيه</span>
           <span className="choco-teaser-arrow">↓</span>
-        </a>
+        </a>}
 
+        {!offersReady && <p role="status">جاري تحديث العروض…</p>}
         <div className="bundle-list">
           {offers.map((offer, index) => {
-            const qty = cart[offer.id] || 0;
+            const qty = offer.flavorsAvailable === false ? 0 : cart[offer.id] || 0;
             const inCart = qty > 0;
             const displayQty = Math.max(qty, 1);
             const isChocoOffer =
@@ -118,6 +123,7 @@ export default function OffersSection({ intro, offers, onCheckout }) {
                 className={`bundle-row${inCart ? ' selected' : ''}${isChocoOffer ? ' bundle-row--choco' : ''}`}
                 style={{ '--accent': offer.accent }}
                 onClick={() => addOfferToCart(offer.id)}
+                aria-disabled={offer.flavorsAvailable === false}
                 role="button"
                 tabIndex={0}
                 aria-label={`${offer.title} — أضف للسلة`}
@@ -132,7 +138,7 @@ export default function OffersSection({ intro, offers, onCheckout }) {
                 {offer.badge && <div className="bundle-row-badge">{offer.badge}</div>}
 
                 <div className="bundle-row-img">
-                  <OfferImage offerId={offer.id} alt={offer.title} width={90} height={90} />
+                  <OfferImage image={offer.image} offerId={offer.id} alt={offer.title} width={90} height={90} />
                 </div>
 
                 <div className="bundle-row-info">
@@ -184,7 +190,7 @@ export default function OffersSection({ intro, offers, onCheckout }) {
                     </div>
                   ) : (
                     <span className="add-to-cart-btn" aria-hidden="true">
-                      🛒 أضف للسلة
+                      {offer.flavorsAvailable === false ? 'النكهات غير متاحة حاليًا' : '🛒 أضف للسلة'}
                     </span>
                   )}
                 </div>
@@ -219,7 +225,8 @@ export default function OffersSection({ intro, offers, onCheckout }) {
             <button
               type="button"
               className="next-btn landing-next-btn"
-              onClick={handleCheckout}
+              disabled={!offersReady}
+            onClick={handleCheckout}
               onMouseEnter={warmCheckout}
               onFocus={warmCheckout}
               onTouchStart={warmCheckout}

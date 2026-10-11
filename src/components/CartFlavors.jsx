@@ -41,6 +41,7 @@ function BundleConfig({
             <span className="bundle-config-count">Healthy Spread</span>
           </div>
           <FlavorPicker
+            options={item.offer.spreadFlavors}
             embedded
             total={spreadTotal}
             maxFlavors={item.offer.configuration?.spread?.maxFlavors ?? 9}
@@ -128,6 +129,7 @@ export default function CartFlavors({
               </summary>
               <div className="fp-cart-line-body">
                 <FlavorPicker
+            options={item.offer.spreadFlavors}
                   embedded
                   total={spreadDistributionTotal(item)}
                   maxFlavors={item.offer.maxFlavors ?? 4}
@@ -174,6 +176,7 @@ export default function CartFlavors({
               </summary>
               <div className="fp-cart-line-body">
                 <ChocoBarPicker
+            options={item.offer.chocoBarFlavors}
                   embedded
                   total={chocoTotal}
                   flavors={itemChocoBar?.[i] ?? emptyChocoBarFlavors()}
@@ -204,6 +207,7 @@ export default function CartFlavors({
                     <span className="bundle-config-count">Healthy Spread</span>
                   </div>
                   <FlavorPicker
+            options={item.offer.spreadFlavors}
                     embedded
                     total={spreadTotal}
                     maxFlavors={item.offer.maxFlavors ?? 9}
@@ -220,6 +224,7 @@ export default function CartFlavors({
                     <span className="bundle-config-count">Choco Bar</span>
                   </div>
                   <ChocoBarPicker
+            options={item.offer.chocoBarFlavors}
                     embedded
                     total={chocoTotal}
                     flavors={itemChocoBar?.[i] ?? emptyChocoBarFlavors()}

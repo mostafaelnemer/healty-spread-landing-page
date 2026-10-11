@@ -6,6 +6,7 @@
     "optimize-assets": "node scripts/optimize-assets.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.3",
     "@vitejs/plugin-react": "latest",
     "react": "latest",
     "react-dom": "latest",

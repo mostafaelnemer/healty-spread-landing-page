@@ -22,7 +22,8 @@ import {
   markOrderCompleted,
 } from '../utils/orderSession.js';
 import {
-  loadCheckoutDraft,
+  loadCheckoutDraftForItems,
+  checkoutSignature,
   saveCheckoutCart,
   saveCheckoutDraft,
 } from '../utils/checkoutSession.js';
@@ -73,8 +74,8 @@ function restoredItemColaFlavors(items, saved) {
   });
 }
 
-export function describeFlavors(flavors) {
-  return spreadFlavors
+export function describeFlavors(flavors, options = spreadFlavors.filter(f => !f.hidden)) {
+  return options
     .filter((f) => (flavors[f.id] ?? 0) > 0)
     .map((f) => `${flavors[f.id]} ${f.shortLabel}`)
     .join(' + ');
@@ -82,9 +83,10 @@ export function describeFlavors(flavors) {
 
 export function flavorsComplete(items, itemFlavors, itemCola, itemChocoBar) {
   return items.every((item, i) => {
+    if (item.offer.flavorsAvailable === false) return false;
     if (offerNeedsFlavors(item.offer) || offerNeedsBundleConfig(item.offer) || offerNeedsSpreadAndChocoBarConfig(item.offer)) {
       const total = spreadDistributionTotal(item);
-      const used = spreadFlavors.reduce((s, f) => s + (itemFlavors[i][f.id] ?? 0), 0);
+      const used = (item.offer.spreadFlavors ?? spreadFlavors.filter(f => !f.hidden)).reduce((s, f) => s + (itemFlavors[i][f.id] ?? 0), 0);
       if (used !== total) return false;
     }
     if (offerNeedsBundleConfig(item.offer)) {
@@ -94,12 +96,12 @@ export function flavorsComplete(items, itemFlavors, itemCola, itemChocoBar) {
     }
     if (offerNeedsChocoBarConfig(item.offer)) {
       const total = item.offer.configuration.total * item.qty;
-      const used = chocoBarFlavors.reduce((s, f) => s + (itemChocoBar?.[i]?.[f.id] ?? 0), 0);
+      const used = (item.offer.chocoBarFlavors ?? chocoBarFlavors).reduce((s, f) => s + (itemChocoBar?.[i]?.[f.id] ?? 0), 0);
       if (used !== total) return false;
     }
     if (offerNeedsSpreadAndChocoBarConfig(item.offer)) {
       const total = item.offer.configuration.chocoBarUnits * item.qty;
-      const used = chocoBarFlavors.reduce((s, f) => s + (itemChocoBar?.[i]?.[f.id] ?? 0), 0);
+      const used = (item.offer.chocoBarFlavors ?? chocoBarFlavors).reduce((s, f) => s + (itemChocoBar?.[i]?.[f.id] ?? 0), 0);
       if (used !== total) return false;
     }
     return true;
@@ -110,28 +112,28 @@ export function buildFlavorSummary(items, itemFlavors, itemCola, itemChocoBar) {
   return items
     .map((item, i) => {
       if (offerNeedsBundleConfig(item.offer)) {
-        const spreadDesc = describeFlavors(itemFlavors[i]);
+        const spreadDesc = describeFlavors(itemFlavors[i], item.offer.spreadFlavors);
         const total = colaDistributionTotal(item);
         const cola = itemCola[i]?.cola ?? 0;
         const lemon = Math.max(0, total - cola);
         return `${item.offer.title} ×${item.qty} (سبريد: ${spreadDesc} | كولا: ${cola} كولا + ${lemon} ليمون نعناع)`;
       }
       if (offerNeedsSpreadAndChocoBarConfig(item.offer)) {
-        const spreadDesc = describeFlavors(itemFlavors[i]);
-        const chocoDesc = chocoBarFlavors
+        const spreadDesc = describeFlavors(itemFlavors[i], item.offer.spreadFlavors);
+        const chocoDesc = (item.offer.chocoBarFlavors ?? chocoBarFlavors)
           .filter((f) => (itemChocoBar?.[i]?.[f.id] ?? 0) > 0)
           .map((f) => `${itemChocoBar[i][f.id]} ${f.shortLabel}`)
           .join(' + ');
         return `${item.offer.title} ×${item.qty} (سبريد: ${spreadDesc} | بار: ${chocoDesc})`;
       }
       if (offerNeedsChocoBarConfig(item.offer)) {
-        const chocoDesc = chocoBarFlavors
+        const chocoDesc = (item.offer.chocoBarFlavors ?? chocoBarFlavors)
           .filter((f) => (itemChocoBar?.[i]?.[f.id] ?? 0) > 0)
           .map((f) => `${itemChocoBar[i][f.id]} ${f.shortLabel}`)
           .join(' + ');
         return `${item.offer.title} ×${item.qty} (${chocoDesc})`;
       }
-      if (offerNeedsFlavors(item.offer)) return describeFlavors(itemFlavors[i]);
+      if (offerNeedsFlavors(item.offer)) return describeFlavors(itemFlavors[i], item.offer.spreadFlavors);
       if (offerNeedsColaConfig(item.offer)) {
         const total = colaDistributionTotal(item);
         const cola = itemCola[i]?.cola ?? 0;
@@ -148,7 +150,7 @@ export { isOrderCompleted } from '../utils/orderSession.js';
 
 export default function StepConfirm({ form, cartItems: initialItems, onBack, onSuccess }) {
   const titleRef = useRef(null);
-  const [initialDraft] = useState(() => loadCheckoutDraft() || {});
+  const [initialDraft] = useState(() => loadCheckoutDraftForItems(initialItems) || {});
   const orderIdRef = useRef(getOrCreateOrderId());
   const [items, setItems] = useState(initialItems);
   const [name, setName] = useState(() => initialDraft.name || '');
@@ -168,7 +170,9 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
     restoredItemColaFlavors(initialItems, initialDraft.itemCola)
   ));
   const [itemChocoBar, setItemChocoBar] = useState(() => (
-    initialItemChocoBarFlavors(initialItems)
+    Array.isArray(initialDraft.itemChocoBar) && initialDraft.itemChocoBar.length === initialItems.length
+      ? initialDraft.itemChocoBar
+      : initialItemChocoBarFlavors(initialItems)
   ));
 
   // A previous submit attempt may have died with an older page (reload or
@@ -217,6 +221,8 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
   useEffect(() => {
     saveCheckoutCart(items);
     saveCheckoutDraft({
+      signature: checkoutSignature(items),
+      itemChocoBar,
       name,
       phone,
       gov,
@@ -225,7 +231,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       itemFlavors,
       itemCola,
     });
-  }, [items, name, phone, gov, address, notes, itemFlavors, itemCola]);
+  }, [items, name, phone, gov, address, notes, itemFlavors, itemCola, itemChocoBar]);
 
   if (items.length === 0) return null;
 
@@ -422,6 +428,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
             </button>
             <div className="confirm-img">
               <OfferImage
+                image={item.offer.image}
                 offerId={item.offer.id}
                 alt={item.offer.title}
                 width={96}
@@ -579,7 +586,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
         type="button"
         className="confirm-order-btn"
         onClick={handleSubmit}
-        disabled={submitState === 'sending' || submitState === 'done'}
+        disabled={items.some(item => item.offer.flavorsAvailable === false) || submitState === 'sending' || submitState === 'done'}
       >
         {submitState === 'sending' ? '⏳ جاري تسجيل الطلب…' : form.submitLabel}
       </button>

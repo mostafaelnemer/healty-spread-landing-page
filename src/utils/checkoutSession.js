@@ -63,3 +63,17 @@ export function clearCheckoutSession(storage = browserSessionStorage()) {
 }
 
 export { CHECKOUT_CART_KEY, CHECKOUT_DRAFT_KEY };
+
+// Bind distributions to the offer definitions, not just array positions.
+export function checkoutSignature(items) {
+  return JSON.stringify(items.map(({ offer, qty }) => ({
+    id: offer.id, qty, units: offer.unitsPerPack, configuration: offer.configuration,
+    flavors: offer.flavorOptions?.map(({ id, name, group }) => ({ id, name, group })),
+  })));
+}
+
+export function loadCheckoutDraftForItems(items, storage = browserSessionStorage()) {
+  const draft = loadCheckoutDraft(storage);
+  if (!draft || draft.signature === checkoutSignature(items)) return draft;
+  return { ...draft, itemFlavors: undefined, itemCola: undefined, itemChocoBar: undefined };
+}

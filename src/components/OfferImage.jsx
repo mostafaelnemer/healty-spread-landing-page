@@ -1,20 +1,23 @@
 import { useEffect, useState } from 'react';
 import { loadOfferImage } from '../utils/offerImages.js';
+import logo from '../assets/logo.webp';
 
-export default function OfferImage({ offerId, alt, width = 90, height = 90, className = '' }) {
+export default function OfferImage({ offerId, image, alt, width = 90, height = 90, className = '' }) {
   const [src, setSrc] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
+    if (image) return;
     loadOfferImage(offerId).then((url) => {
-      if (!cancelled && url) setSrc(url);
+      if (!cancelled) setSrc(url || logo);
     });
     return () => {
       cancelled = true;
     };
-  }, [offerId]);
+  }, [offerId, image]);
 
-  if (!src) {
+  const displaySrc = image || src;
+  if (!displaySrc) {
     return (
       <div
         className={`offer-img-placeholder ${className}`.trim()}
@@ -26,7 +29,8 @@ export default function OfferImage({ offerId, alt, width = 90, height = 90, clas
 
   return (
     <img
-      src={src}
+      src={displaySrc}
+      style={displaySrc === logo ? { objectFit: 'contain', backgroundColor: '#fff' } : undefined}
       alt={alt}
       width={width}
       height={height}

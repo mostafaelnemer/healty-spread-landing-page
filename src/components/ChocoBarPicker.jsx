@@ -7,25 +7,25 @@ export function emptyChocoBarFlavors() {
   return Object.fromEntries(chocoBarFlavors.map((f) => [f.id, 0]));
 }
 
-function buildRecord(qtys) {
-  return Object.fromEntries(chocoBarFlavors.map((f) => [f.id, qtys[f.id] ?? 0]));
+function buildRecord(qtys, options) {
+  return Object.fromEntries(options.map((f) => [f.id, qtys[f.id] ?? 0]));
 }
 
-export default function ChocoBarPicker({ total, flavors, onChange, embedded = false }) {
+export default function ChocoBarPicker({ total, flavors, onChange, options = chocoBarFlavors.filter(f => !f.hidden), embedded = false }) {
   const qtys = flavors ?? emptyChocoBarFlavors();
-  const used = chocoBarFlavors.reduce((s, f) => s + (qtys[f.id] ?? 0), 0);
+  const used = options.reduce((s, f) => s + (qtys[f.id] ?? 0), 0);
   const remaining = total - used;
   const isDone = remaining === 0;
 
-  const summary = chocoBarFlavors
+  const summary = options
     .filter((f) => (qtys[f.id] ?? 0) > 0)
     .map((f) => `${qtys[f.id]} ${f.shortLabel}`)
     .join(' + ');
 
-  const apply = (next) => onChange(buildRecord(next));
+  const apply = (next) => onChange(buildRecord(next, options));
 
   const increment = (id) => {
-    if (remaining === 0) return;
+    if (remaining <= 0) return;
     apply({ ...qtys, [id]: (qtys[id] ?? 0) + 1 });
   };
 
@@ -42,8 +42,9 @@ export default function ChocoBarPicker({ total, flavors, onChange, embedded = fa
           : `باقي ${toArabic(remaining)} قطعة للتوزيع`}
       </div>
 
+      {options.length === 0 && <p role="status">النكهات غير متاحة حاليًا — اختار عرض تاني.</p>}
       <div className="fp-qty-list">
-        {chocoBarFlavors.map((f) => {
+        {options.map((f) => {
           const qty = qtys[f.id] ?? 0;
           const canAdd = remaining > 0;
 
@@ -52,7 +53,7 @@ export default function ChocoBarPicker({ total, flavors, onChange, embedded = fa
               key={f.id}
               className={`fp-qty-row${qty > 0 ? ' fp-qty-row--active' : ''}`}
             >
-              <img
+              {f.image ? <img
                 src={f.image}
                 alt={f.shortLabel}
                 className="fp-qty-img"
@@ -60,7 +61,7 @@ export default function ChocoBarPicker({ total, flavors, onChange, embedded = fa
                 height={44}
                 loading="lazy"
                 decoding="async"
-              />
+              /> : <span className="fp-qty-img" aria-hidden="true">🍫</span>}
               <span className="fp-qty-name">
                 <span className="fp-qty-name-main">{f.shortLabel}</span>
                 {f.weight && <span className="fp-qty-weight">{f.weight}</span>}

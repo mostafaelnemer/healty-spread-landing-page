@@ -1,5 +1,6 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useState } from 'react';
 import { landingData } from './data/landingData.js';
+import { useSpreadOffers } from './useSpreadOffers.js';
 import OffersSection from './components/OffersSection.jsx';
 import CountdownTimer from './components/CountdownTimer.jsx';
 import { isOrderCompleted, ORDER_ID_KEY } from './utils/orderSession.js';
@@ -257,26 +258,29 @@ function PurchaseSuccess({ onBack }) {
 
 export default function App() {
   const route = useRoute();
-  const cartRef = useRef(null);
-  if (cartRef.current === null) {
-    cartRef.current = loadCheckoutCart(landingData.offers);
-  }
-  const [, setCartItems] = useState([]);
+  const { offers, ready } = useSpreadOffers();
+  const [cartItems, setCartItems] = useState([]);
+  const [restoring, setRestoring] = useState(() => route === '/add_to_cart');
+
+  useEffect(() => {
+    if (!restoring || !ready) return;
+    setCartItems(loadCheckoutCart(offers));
+    setRestoring(false);
+  }, [offers, ready, restoring]);
 
   useLayoutEffect(() => {
     window.scrollTo(0, 0);
   }, [route]);
 
   useEffect(() => {
-    if (route === '/add_to_cart' && cartRef.current.length === 0) {
+    if (route === '/add_to_cart' && !restoring && cartItems.length === 0) {
       navigate('/');
     }
-  }, [route]);
+  }, [route, restoring, cartItems.length]);
 
   const goToCart = (items) => {
     clearCheckoutDraft();
     saveCheckoutCart(items);
-    cartRef.current = items;
     setCartItems(items);
     navigate('/add_to_cart');
   };
@@ -284,13 +288,11 @@ export default function App() {
   const goToPurchase = () => {
     navigate('/purchase');
     clearCheckoutSession();
-    cartRef.current = [];
     setCartItems([]);
   };
 
   const goHome = () => {
     clearCheckoutSession();
-    cartRef.current = [];
     setCartItems([]);
     navigate('/');
   };
@@ -299,9 +301,13 @@ export default function App() {
     return <PurchaseSuccess onBack={goHome} />;
   }
 
+  if (route === '/add_to_cart' && restoring) {
+    return <main className="funnel" dir="rtl"><p role="status">جاري استرجاع سلتك…</p></main>;
+  }
+
   if (route === '/add_to_cart') {
     const lastOrderId = sessionStorage.getItem(ORDER_ID_KEY);
-    if (cartRef.current.length === 0 || (lastOrderId && isOrderCompleted(lastOrderId))) {
+    if (cartItems.length === 0 || (lastOrderId && isOrderCompleted(lastOrderId))) {
       if (route === '/add_to_cart') navigate('/');
       return null;
     }
@@ -325,7 +331,7 @@ export default function App() {
         <Suspense fallback={<SectionFallback minHeight={200} />}>
           <StepConfirm
             form={landingData.form}
-            cartItems={cartRef.current}
+            cartItems={cartItems}
             onBack={goHome}
             onSuccess={goToPurchase}
           />
@@ -339,7 +345,7 @@ export default function App() {
       <Header brand={landingData.brand} nav={landingData.nav} />
       <main>
         <Hero hero={landingData.hero} />
-        <OffersSection intro={landingData.offersIntro} offers={landingData.offers} onCheckout={goToCart} />
+        <OffersSection intro={landingData.offersIntro} offers={offers} offersReady={ready} onCheckout={goToCart} />
         <Benefits benefits={landingData.benefits} />
       </main>
       <Footer brand={landingData.brand} footer={landingData.footer} />
