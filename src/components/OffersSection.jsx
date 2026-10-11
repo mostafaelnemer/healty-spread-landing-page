@@ -1,3 +1,4 @@
+import { usePageContent } from '../PageContent.jsx';
 import { useEffect, useRef, useState } from 'react';
 import React from 'react';
 import { formatPrice } from '../data/landingData.js';
@@ -14,6 +15,7 @@ import {
 import { trackMetaEvent, metaParamsFromOffer, metaParamsFromItems } from '../utils/metaPixel.js';
 
 export default function OffersSection({ intro, offers, offersReady, onCheckout }) {
+  const content = usePageContent();
   const [cart, setCart] = useState({});
   const checkoutGuardRef = useRef(false);
 
@@ -77,7 +79,7 @@ export default function OffersSection({ intro, offers, offersReady, onCheckout }
             onFocus={warmCheckout}
             onTouchStart={warmCheckout}
           >
-            أكمل الطلب ←
+            {content.checkoutCta} ←
           </button>
         </div>
       )}
@@ -231,7 +233,7 @@ export default function OffersSection({ intro, offers, offersReady, onCheckout }
               onFocus={warmCheckout}
               onTouchStart={warmCheckout}
             >
-              أكمل الطلب ←
+              {content.checkoutCta} ←
             </button>
           </div>
         )}

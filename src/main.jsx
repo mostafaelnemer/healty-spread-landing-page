@@ -1,3 +1,4 @@
+import { PageContentProvider } from './PageContent.jsx'
 import React, { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
@@ -33,7 +34,7 @@ function Root() {
     requestAnimationFrame(initScrollReveal);
   }, []);
 
-  return <App />;
+  return <PageContentProvider site="spread"><App /></PageContentProvider>;
 }
 
 createRoot(document.getElementById('root')).render(<Root />);

@@ -1,3 +1,4 @@
+import { usePageContent } from './PageContent.jsx'
 import { lazy, Suspense, useEffect, useLayoutEffect, useState } from 'react';
 import { landingData } from './data/landingData.js';
 import { useSpreadOffers } from './useSpreadOffers.js';
@@ -37,14 +38,16 @@ function SectionFallback({ minHeight = 200 }) {
 }
 
 function Header({ brand, nav }) {
+  const content = usePageContent();
+  const navLabels = [content.navBenefits, content.navOffers, content.navOrder];
   return (
     <>
       <div className="promo-bar">
-        <span>🚚 توصيل مجاناً</span>
+        <span>{content.promo1}</span>
         <span>•</span>
-        <span>🍫 جديد: شيكولاتة بار</span>
+        <span>{content.promo2}</span>
         <span>•</span>
-        <span>Healthy Spread بدون سكر مضاف</span>
+        <span>{content.promo3}</span>
         <span>•</span>
         <CountdownTimer variant="bar" />
       </div>
@@ -53,14 +56,14 @@ function Header({ brand, nav }) {
           <img src={brand.logo} alt={brand.name} decoding="async" width={160} height={40} />
         </a>
         <nav className="main-nav" aria-label="روابط الصفحة">
-          {nav.map((item) => (
+          {nav.map((item, index) => (
             <a key={item.label} href={item.href}>
-              {item.label}
+              {navLabels[index] || item.label}
             </a>
           ))}
         </nav>
         <a className="header-cta" href="#offers">
-          اطلب الآن 🛒
+          {content.headerCta}
         </a>
       </header>
     </>
@@ -191,12 +194,13 @@ function Benefits({ benefits }) {
 function Audience({ audience }) { return null; }
 function LoveReasons({ loveReasons }) { return null; }
 
-function Footer({ brand, footer }) {
+function Footer({ brand }) {
+  const content = usePageContent();
   return (
     <footer className="site-footer">
       <img src={brand.logo} alt={brand.name} loading="lazy" decoding="async" width={260} height={64} />
-      <p>{brand.tagline}</p>
-      <span>{footer.note}</span>
+      <p>{content.footerTagline}</p>
+      <span>{content.footerNote}</span>
     </footer>
   );
 }
@@ -348,7 +352,7 @@ export default function App() {
         <OffersSection intro={landingData.offersIntro} offers={offers} offersReady={ready} onCheckout={goToCart} />
         <Benefits benefits={landingData.benefits} />
       </main>
-      <Footer brand={landingData.brand} footer={landingData.footer} />
+      <Footer brand={landingData.brand} />
       <CountdownTimer variant="floating" />
     </>
   );
