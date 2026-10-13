@@ -14,9 +14,9 @@ import {
 } from '../utils/cartState.js';
 import { trackMetaEvent, metaParamsFromOffer, metaParamsFromItems } from '../utils/metaPixel.js';
 
-export default function OffersSection({ intro, offers, offersReady, onCheckout }) {
+export default function OffersSection({ intro, offers, offersReady, onCheckout, initialCart = {} }) {
   const content = usePageContent();
-  const [cart, setCart] = useState({});
+  const [cart, setCart] = useState(initialCart);
   const checkoutGuardRef = useRef(false);
 
   const availableOffers = offers.filter(o => o.flavorsAvailable !== false);

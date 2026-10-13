@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [react()],
   build: {
     rollupOptions: {
+      input: { main: 'index.html', preview: 'preview.html' },
       output: {
         manualChunks(id) {
           if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) {

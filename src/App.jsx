@@ -357,3 +357,14 @@ export default function App() {
     </>
   );
 }
+
+
+export function LandingPreview({ showCart }) {
+  const { offers, ready } = useSpreadOffers();
+  const first = offers.find(offer => offer.flavorsAvailable !== false);
+  return <>
+    <Header brand={landingData.brand} nav={landingData.nav} />
+    <main><Hero hero={landingData.hero} /><OffersSection key={first?.id || 'empty'} intro={landingData.offersIntro} offers={offers} offersReady={ready} onCheckout={() => {}} initialCart={showCart && first ? { [first.id]: 1 } : {}} /><Benefits benefits={landingData.benefits} /></main>
+    <Footer brand={landingData.brand} /><CountdownTimer variant="floating" />
+  </>;
+}
