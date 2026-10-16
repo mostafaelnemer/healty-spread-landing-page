@@ -1,3 +1,4 @@
+import { cartShipping } from '../shipping.js';
 import { useEffect, useRef, useState } from 'react';
 import { egyptGovs, formatPrice, spreadFlavors, chocoBarFlavors } from '../data/landingData.js';
 import { emptyFlavors } from './FlavorPicker.jsx';
@@ -238,7 +239,8 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
   const totalPrice    = items.reduce((sum, item) => sum + item.offer.price    * item.qty, 0);
   const totalOriginal = items.reduce((sum, item) => sum + item.offer.originalPrice * item.qty, 0);
   const totalSaving   = totalOriginal - totalPrice;
-  const grandTotal    = totalPrice;
+  const shipping = cartShipping(items, 'spread').fee;
+  const grandTotal    = totalPrice + shipping;
   const flavorsOk = flavorsComplete(items, itemFlavors, itemCola, itemChocoBar);
 
   const errors = {
@@ -480,7 +482,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
           </div>
           <div className="cart-total-row">
             <span>🚚 الشحن</span>
-            <span>مجاناً</span>
+            <span>{shipping ? formatPrice(shipping) : 'مجاناً'}</span>
           </div>
           <div className="cart-total-row cart-total-grand">
             <span>الإجمالي</span>

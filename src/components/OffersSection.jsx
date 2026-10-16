@@ -1,3 +1,4 @@
+import { shippingLabel, shippingSummary } from '../shipping.js';
 import { usePageContent } from '../PageContent.jsx';
 import { useEffect, useRef, useState } from 'react';
 import React from 'react';
@@ -10,6 +11,7 @@ import {
   incrementCartItem,
   setCartItemQty,
   getCartSubtotal,
+  getItemsShipping,
   cartToCheckoutItems,
 } from '../utils/cartState.js';
 import { trackMetaEvent, metaParamsFromOffer, metaParamsFromItems } from '../utils/metaPixel.js';
@@ -22,7 +24,8 @@ export default function OffersSection({ intro, offers, offersReady, onCheckout, 
   const availableOffers = offers.filter(o => o.flavorsAvailable !== false);
   const cartCount = availableOffers.reduce((sum, offer) => sum + (cart[offer.id] || 0), 0);
   const subtotal = getCartSubtotal(cart, availableOffers);
-  const grandTotal = subtotal;
+  const shipping = getItemsShipping(cartToCheckoutItems(cart, availableOffers));
+  const grandTotal = subtotal + shipping;
 
   useEffect(() => {
     offers.forEach((o) => loadOfferImage(o.id));
@@ -88,7 +91,7 @@ export default function OffersSection({ intro, offers, offersReady, onCheckout, 
         <div className="section-intro light centered">
           <span className="eyebrow">{intro.eyebrow}</span>
           <h2>{intro.title}</h2>
-          <p>{intro.description}</p>
+          <p>{shippingSummary(offers, 'spread')} · الدفع عند الاستلام 💳</p>
           <CountdownTimer />
         </div>
 
@@ -121,6 +124,7 @@ export default function OffersSection({ intro, offers, offersReady, onCheckout, 
                   </div>
                 )}
               <article
+                data-offer-id={offer.id}
                 key={offer.id}
                 className={`bundle-row${inCart ? ' selected' : ''}${isChocoOffer ? ' bundle-row--choco' : ''}`}
                 style={{ '--accent': offer.accent }}
@@ -154,13 +158,13 @@ export default function OffersSection({ intro, offers, offersReady, onCheckout, 
                     <span className="saving-tag">وفر {formatPrice(offer.saving * displayQty)}</span>
                   </div>
                   {offer.configuration?.type === 'bundle' ? (
-                    <p className="bundle-row-meta">🚚 توصيل مجاناً · ⚖️ 375 جرام لكل برطمان · 🥤 350 مل لكل زجاجة كولا</p>
+                    <p className="bundle-row-meta">{shippingLabel(offer, 'spread')} · ⚖️ 375 جرام لكل برطمان · 🥤 350 مل لكل زجاجة كولا</p>
                   ) : offer.configuration?.type === 'chocoBar' ? (
-                    <p className="bundle-row-meta">🚚 توصيل مجاناً · ⚖️ 40 جرام للقطعة</p>
+                    <p className="bundle-row-meta">{shippingLabel(offer, 'spread')} · ⚖️ 40 جرام للقطعة</p>
                   ) : offer.configuration?.type === 'spreadAndChocoBar' ? (
-                    <p className="bundle-row-meta">🚚 توصيل مجاناً · ⚖️ 375 جرام للسبريد · ⚖️ 40 جرام للشيكولاتة بار</p>
+                    <p className="bundle-row-meta">{shippingLabel(offer, 'spread')} · ⚖️ 375 جرام للسبريد · ⚖️ 40 جرام للشيكولاتة بار</p>
                   ) : (
-                    <p className="bundle-row-meta">🚚 توصيل مجاناً · ⚖️ 375 جرام لكل برطمان</p>
+                    <p className="bundle-row-meta">{shippingLabel(offer, 'spread')} · ⚖️ 375 جرام لكل برطمان</p>
                   )}
 
                   {inCart ? (
@@ -203,7 +207,7 @@ export default function OffersSection({ intro, offers, offersReady, onCheckout, 
         </div>
 
         <div className="trust-pills">
-          <span>🚚 توصيل مجاناً</span>
+          <span>{shippingSummary(offers, 'spread')}</span>
           <span>💳 الدفع عند الاستلام</span>
           <span>🌿 بدون سكر مضاف</span>
         </div>
@@ -217,7 +221,7 @@ export default function OffersSection({ intro, offers, offersReady, onCheckout, 
               </div>
               <div className="checkout-summary-row">
                 <span>🚚 الشحن</span>
-                <span>مجاناً</span>
+                <span>{shipping ? formatPrice(shipping) : 'مجاناً'}</span>
               </div>
               <div className="checkout-summary-row checkout-summary-total">
                 <span>الإجمالي</span>

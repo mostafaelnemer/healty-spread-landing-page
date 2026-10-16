@@ -1,3 +1,4 @@
+import { shippingSummary } from './shipping.js';
 import { usePageContent } from './PageContent.jsx'
 import { lazy, Suspense, useEffect, useLayoutEffect, useState } from 'react';
 import { landingData } from './data/landingData.js';
@@ -37,13 +38,13 @@ function SectionFallback({ minHeight = 200 }) {
   return <div className="section-fallback" aria-hidden="true" style={{ minHeight }} />;
 }
 
-function Header({ brand, nav }) {
+function Header({ brand, nav, offers }) {
   const content = usePageContent();
   const navLabels = [content.navBenefits, content.navOffers, content.navOrder];
   return (
     <>
       <div className="promo-bar">
-        <span>{content.promo1}</span>
+        <span>{content.promo1 === '🚚 توصيل مجاناً' ? shippingSummary(offers, 'spread') : content.promo1}</span>
         <span>•</span>
         <span>{content.promo2}</span>
         <span>•</span>
@@ -346,7 +347,7 @@ export default function App() {
 
   return (
     <>
-      <Header brand={landingData.brand} nav={landingData.nav} />
+      <Header brand={landingData.brand} nav={landingData.nav} offers={offers} />
       <main>
         <Hero hero={landingData.hero} />
         <OffersSection intro={landingData.offersIntro} offers={offers} offersReady={ready} onCheckout={goToCart} />
@@ -359,11 +360,11 @@ export default function App() {
 }
 
 
-export function LandingPreview({ showCart }) {
+export function LandingPreview({ showCart, focusSlug }) {
   const { offers, ready } = useSpreadOffers();
-  const first = offers.find(offer => offer.flavorsAvailable !== false);
+  const first = focusSlug ? offers.find(offer => offer.id === focusSlug && offer.flavorsAvailable !== false) : offers.find(offer => offer.flavorsAvailable !== false);
   return <>
-    <Header brand={landingData.brand} nav={landingData.nav} />
+    <Header brand={landingData.brand} nav={landingData.nav} offers={offers} />
     <main><Hero hero={landingData.hero} /><OffersSection key={first?.id || 'empty'} intro={landingData.offersIntro} offers={offers} offersReady={ready} onCheckout={() => {}} initialCart={showCart && first ? { [first.id]: 1 } : {}} /><Benefits benefits={landingData.benefits} /></main>
     <Footer brand={landingData.brand} /><CountdownTimer variant="floating" />
   </>;

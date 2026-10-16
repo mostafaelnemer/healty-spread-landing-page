@@ -1,3 +1,4 @@
+import { cartShipping } from '../shipping.js';
 
 export function incrementCartItem(cart, offerId) {
   return { ...cart, [offerId]: (cart[offerId] || 0) + 1 };
@@ -27,7 +28,7 @@ export function getGrandTotal(cart, offers, shippingFee) {
 }
 
 export function getItemsShipping(items) {
-  return items.reduce((max, item) => Math.max(max, item.offer?.shippingFee ?? 0), 0);
+  return cartShipping(items, 'spread').fee;
 }
 
 export function cartToCheckoutItems(cart, offers) {
