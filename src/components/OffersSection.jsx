@@ -71,7 +71,7 @@ export default function OffersSection({ intro, offers, offersReady, onCheckout, 
             <span className="offer-sticky-title">
               {cartCount === 1 ? 'منتج واحد في السلة' : `${cartCount} منتجات في السلة`}
             </span>
-            <span className="offer-sticky-price">{formatPrice(grandTotal)}{deferred ? ' · مبدئي، الشحن مع الكول سنتر' : ''}</span>
+            <span className="offer-sticky-price">{formatPrice(grandTotal)}</span>
           </div>
           <button
             type="button"
@@ -158,13 +158,13 @@ export default function OffersSection({ intro, offers, offersReady, onCheckout, 
                     <span className="saving-tag">وفر {formatPrice(offer.saving * displayQty)}</span>
                   </div>
                   {offer.configuration?.type === 'bundle' ? (
-                    <p className="bundle-row-meta">{shippingLabel(offer, 'spread')} · ⚖️ 375 جرام لكل برطمان · 🥤 350 مل لكل زجاجة كولا</p>
+                    <p className="bundle-row-meta">{shippingLabel(offer, 'spread') ? `${shippingLabel(offer, 'spread')} · ` : ''}⚖️ 375 جرام لكل برطمان · 🥤 350 مل لكل زجاجة كولا</p>
                   ) : offer.configuration?.type === 'chocoBar' ? (
-                    <p className="bundle-row-meta">{shippingLabel(offer, 'spread')} · ⚖️ 40 جرام للقطعة</p>
+                    <p className="bundle-row-meta">{shippingLabel(offer, 'spread') ? `${shippingLabel(offer, 'spread')} · ` : ''}⚖️ 40 جرام للقطعة</p>
                   ) : offer.configuration?.type === 'spreadAndChocoBar' ? (
-                    <p className="bundle-row-meta">{shippingLabel(offer, 'spread')} · ⚖️ 375 جرام للسبريد · ⚖️ 40 جرام للشيكولاتة بار</p>
+                    <p className="bundle-row-meta">{shippingLabel(offer, 'spread') ? `${shippingLabel(offer, 'spread')} · ` : ''}⚖️ 375 جرام للسبريد · ⚖️ 40 جرام للشيكولاتة بار</p>
                   ) : (
-                    <p className="bundle-row-meta">{shippingLabel(offer, 'spread')} · ⚖️ 375 جرام لكل برطمان</p>
+                    <p className="bundle-row-meta">{shippingLabel(offer, 'spread') ? `${shippingLabel(offer, 'spread')} · ` : ''}⚖️ 375 جرام لكل برطمان</p>
                   )}
 
                   {inCart ? (
@@ -219,12 +219,14 @@ export default function OffersSection({ intro, offers, offersReady, onCheckout, 
                 <span>المنتجات ({cartCount})</span>
                 <span>{formatPrice(subtotal)}</span>
               </div>
-              <div className="checkout-summary-row">
-                <span>🚚 الشحن</span>
-                <span>{cartShippingLabel(checkoutItems, 'spread')}</span>
-              </div>
+              {!deferred && (
+                <div className="checkout-summary-row">
+                  <span>🚚 الشحن</span>
+                  <span>{cartShippingLabel(checkoutItems, 'spread')}</span>
+                </div>
+              )}
               <div className="checkout-summary-row checkout-summary-total">
-                <span>{deferred ? 'الإجمالي المبدئي' : 'الإجمالي'}</span>
+                <span>الإجمالي</span>
                 <span>{formatPrice(grandTotal)}</span>
               </div>
             </div>

@@ -414,7 +414,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
 
       <div className="cart-summary-header">
         <span className="cart-summary-title">🛒 ملخص طلبك</span>
-        <span className="cart-summary-total">{formatPrice(grandTotal)}{deferred ? ' · إجمالي مبدئي' : ''}</span>
+        <span className="cart-summary-total">{formatPrice(grandTotal)}</span>
       </div>
 
       {items.map((item, i) => (
@@ -480,12 +480,14 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
             <span>الاوردر</span>
             <span>{formatPrice(totalPrice)}</span>
           </div>
-          <div className="cart-total-row">
-            <span>🚚 الشحن</span>
-            <span>{cartShippingLabel(items, 'spread')}</span>
-          </div>
+          {!deferred && (
+            <div className="cart-total-row">
+              <span>🚚 الشحن</span>
+              <span>{cartShippingLabel(items, 'spread')}</span>
+            </div>
+          )}
           <div className="cart-total-row cart-total-grand">
-            <span>{deferred ? 'الإجمالي المبدئي' : 'الإجمالي'}</span>
+            <span>الإجمالي</span>
             <strong>{formatPrice(grandTotal)}</strong>
           </div>
         </div>
