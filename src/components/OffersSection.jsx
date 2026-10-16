@@ -1,4 +1,4 @@
-import { shippingLabel, shippingSummary } from '../shipping.js';
+import { shippingLabel, shippingSummary, cartShipping, cartShippingLabel } from '../shipping.js';
 import { usePageContent } from '../PageContent.jsx';
 import { useEffect, useRef, useState } from 'react';
 import React from 'react';
@@ -11,7 +11,6 @@ import {
   incrementCartItem,
   setCartItemQty,
   getCartSubtotal,
-  getItemsShipping,
   cartToCheckoutItems,
 } from '../utils/cartState.js';
 import { trackMetaEvent, metaParamsFromOffer, metaParamsFromItems } from '../utils/metaPixel.js';
@@ -24,7 +23,8 @@ export default function OffersSection({ intro, offers, offersReady, onCheckout, 
   const availableOffers = offers.filter(o => o.flavorsAvailable !== false);
   const cartCount = availableOffers.reduce((sum, offer) => sum + (cart[offer.id] || 0), 0);
   const subtotal = getCartSubtotal(cart, availableOffers);
-  const shipping = getItemsShipping(cartToCheckoutItems(cart, availableOffers));
+  const checkoutItems = cartToCheckoutItems(cart, availableOffers);
+  const { fee: shipping, deferred } = cartShipping(checkoutItems, 'spread');
   const grandTotal = subtotal + shipping;
 
   useEffect(() => {
@@ -71,7 +71,7 @@ export default function OffersSection({ intro, offers, offersReady, onCheckout, 
             <span className="offer-sticky-title">
               {cartCount === 1 ? 'منتج واحد في السلة' : `${cartCount} منتجات في السلة`}
             </span>
-            <span className="offer-sticky-price">{formatPrice(grandTotal)}</span>
+            <span className="offer-sticky-price">{formatPrice(grandTotal)}{deferred ? ' · مبدئي، الشحن مع الكول سنتر' : ''}</span>
           </div>
           <button
             type="button"
@@ -221,10 +221,10 @@ export default function OffersSection({ intro, offers, offersReady, onCheckout, 
               </div>
               <div className="checkout-summary-row">
                 <span>🚚 الشحن</span>
-                <span>{shipping ? formatPrice(shipping) : 'مجاناً'}</span>
+                <span>{cartShippingLabel(checkoutItems, 'spread')}</span>
               </div>
               <div className="checkout-summary-row checkout-summary-total">
-                <span>الإجمالي</span>
+                <span>{deferred ? 'الإجمالي المبدئي' : 'الإجمالي'}</span>
                 <span>{formatPrice(grandTotal)}</span>
               </div>
             </div>

@@ -1,4 +1,4 @@
-import { cartShipping } from '../shipping.js';
+import { cartShipping, cartShippingLabel, shippingOrderNote } from '../shipping.js';
 import { useEffect, useRef, useState } from 'react';
 import { egyptGovs, formatPrice, spreadFlavors, chocoBarFlavors } from '../data/landingData.js';
 import { emptyFlavors } from './FlavorPicker.jsx';
@@ -239,7 +239,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
   const totalPrice    = items.reduce((sum, item) => sum + item.offer.price    * item.qty, 0);
   const totalOriginal = items.reduce((sum, item) => sum + item.offer.originalPrice * item.qty, 0);
   const totalSaving   = totalOriginal - totalPrice;
-  const shipping = cartShipping(items, 'spread').fee;
+  const { fee: shipping, deferred } = cartShipping(items, 'spread');
   const grandTotal    = totalPrice + shipping;
   const flavorsOk = flavorsComplete(items, itemFlavors, itemCola, itemChocoBar);
 
@@ -330,7 +330,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
         phone,
         gov,
         address,
-        notes: notes || '',
+        notes: shippingOrderNote(notes, items, 'spread'),
         bundle: buildOfferSummary(),
         flavors: buildFlavorSummary(items, itemFlavors, itemCola, itemChocoBar),
         quantity: String(items.reduce((s, item) => s + (offerNeedsFlavors(item.offer) ? item.offer.unitsPerPack * item.qty : item.qty), 0)),
@@ -414,7 +414,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
 
       <div className="cart-summary-header">
         <span className="cart-summary-title">🛒 ملخص طلبك</span>
-        <span className="cart-summary-total">{formatPrice(grandTotal)}</span>
+        <span className="cart-summary-total">{formatPrice(grandTotal)}{deferred ? ' · إجمالي مبدئي' : ''}</span>
       </div>
 
       {items.map((item, i) => (
@@ -482,10 +482,10 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
           </div>
           <div className="cart-total-row">
             <span>🚚 الشحن</span>
-            <span>{shipping ? formatPrice(shipping) : 'مجاناً'}</span>
+            <span>{cartShippingLabel(items, 'spread')}</span>
           </div>
           <div className="cart-total-row cart-total-grand">
-            <span>الإجمالي</span>
+            <span>{deferred ? 'الإجمالي المبدئي' : 'الإجمالي'}</span>
             <strong>{formatPrice(grandTotal)}</strong>
           </div>
         </div>
