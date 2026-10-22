@@ -12,10 +12,16 @@ import {
   offerNeedsBundleConfig,
   offerNeedsChocoBarConfig,
   offerNeedsSpreadAndChocoBarConfig,
+  offerNeedsComponents,
   spreadDistributionTotal,
   colaDistributionTotal,
   itemNeedsColaDistribution,
 } from '../utils/cartState.js';
+import {
+  normalizeBundleValues,
+  bundleValuesComplete,
+  describeBundleValues,
+} from './bundleSelection.js';
 import { trackPurchaseOnce, metaParamsFromItems, setAdvancedMatching } from '../utils/metaPixel.js';
 import {
   getOrCreateOrderId,
@@ -51,6 +57,16 @@ function initialItemChocoBarFlavors(items) {
   );
 }
 
+function restoredItemComponents(items, saved) {
+  return items.map((item, index) => {
+    if (!offerNeedsComponents(item.offer)) return null;
+    return normalizeBundleValues(
+      item.offer.components,
+      Array.isArray(saved) ? saved[index] : null,
+    );
+  });
+}
+
 function restoredItemFlavors(items, saved) {
   if (!Array.isArray(saved) || saved.length !== items.length) {
     return initialItemFlavors(items);
@@ -82,9 +98,12 @@ export function describeFlavors(flavors, options = spreadFlavors.filter(f => !f.
     .join(' + ');
 }
 
-export function flavorsComplete(items, itemFlavors, itemCola, itemChocoBar) {
+export function flavorsComplete(items, itemFlavors, itemCola, itemChocoBar, itemComponents) {
   return items.every((item, i) => {
     if (item.offer.flavorsAvailable === false) return false;
+    if (offerNeedsComponents(item.offer)) {
+      return bundleValuesComplete(item.offer.components, itemComponents?.[i]);
+    }
     if (offerNeedsFlavors(item.offer) || offerNeedsBundleConfig(item.offer) || offerNeedsSpreadAndChocoBarConfig(item.offer)) {
       const total = spreadDistributionTotal(item);
       const used = (item.offer.spreadFlavors ?? spreadFlavors.filter(f => !f.hidden)).reduce((s, f) => s + (itemFlavors[i][f.id] ?? 0), 0);
@@ -109,9 +128,12 @@ export function flavorsComplete(items, itemFlavors, itemCola, itemChocoBar) {
   });
 }
 
-export function buildFlavorSummary(items, itemFlavors, itemCola, itemChocoBar) {
+export function buildFlavorSummary(items, itemFlavors, itemCola, itemChocoBar, itemComponents) {
   return items
     .map((item, i) => {
+      if (offerNeedsComponents(item.offer)) {
+        return `${item.offer.title} ×${item.qty} (${describeBundleValues(item.offer.components, itemComponents?.[i])})`;
+      }
       if (offerNeedsBundleConfig(item.offer)) {
         const spreadDesc = describeFlavors(itemFlavors[i], item.offer.spreadFlavors);
         const total = colaDistributionTotal(item);
@@ -175,6 +197,9 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       ? initialDraft.itemChocoBar
       : initialItemChocoBarFlavors(initialItems)
   ));
+  const [itemComponents, setItemComponents] = useState(() => (
+    restoredItemComponents(initialItems, initialDraft.itemComponents)
+  ));
 
   // A previous submit attempt may have died with an older page (reload or
   // tab close) leaving its sessionStorage flag behind. The orderId is stable
@@ -231,8 +256,9 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
       notes,
       itemFlavors,
       itemCola,
+      itemComponents,
     });
-  }, [items, name, phone, gov, address, notes, itemFlavors, itemCola, itemChocoBar]);
+  }, [items, name, phone, gov, address, notes, itemFlavors, itemCola, itemChocoBar, itemComponents]);
 
   if (items.length === 0) return null;
 
@@ -241,7 +267,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
   const totalSaving   = totalOriginal - totalPrice;
   const { fee: shipping, deferred } = cartShipping(items, 'spread');
   const grandTotal    = totalPrice + shipping;
-  const flavorsOk = flavorsComplete(items, itemFlavors, itemCola, itemChocoBar);
+  const flavorsOk = flavorsComplete(items, itemFlavors, itemCola, itemChocoBar, itemComponents);
 
   const errors = {
     name: !name.trim() ? 'الاسم مطلوب' : '',
@@ -265,6 +291,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
     setItemFlavors((prev) => prev.filter((_, i) => i !== index));
     setItemCola((prev) => prev.filter((_, i) => i !== index));
     setItemChocoBar((prev) => prev.filter((_, i) => i !== index));
+    setItemComponents((prev) => prev.filter((_, i) => i !== index));
   };
 
   const buildOfferSummary = () =>
@@ -332,8 +359,8 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
         address,
         notes: shippingOrderNote(notes, items, 'spread'),
         bundle: buildOfferSummary(),
-        flavors: buildFlavorSummary(items, itemFlavors, itemCola, itemChocoBar),
-        quantity: String(items.reduce((s, item) => s + (offerNeedsFlavors(item.offer) ? item.offer.unitsPerPack * item.qty : item.qty), 0)),
+        flavors: buildFlavorSummary(items, itemFlavors, itemCola, itemChocoBar, itemComponents),
+        quantity: String(items.reduce((s, item) => s + (offerNeedsFlavors(item.offer) || offerNeedsComponents(item.offer) ? item.offer.unitsPerPack * item.qty : item.qty), 0)),
         price: String(grandTotal),
         fbp: getCookie('_fbp'),
         fbc: getCookie('_fbc'),
@@ -468,9 +495,15 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
           onItemColaChange={setItemCola}
           itemChocoBar={itemChocoBar}
           onItemChocoBarChange={setItemChocoBar}
+          itemComponents={itemComponents}
+          onItemComponentsChange={setItemComponents}
         />
         {flavorTouched && !flavorsOk && (
-          <p className="field-msg error fp-flavor-error">من فضلك وزّع كل البرطمانات على النكهات</p>
+          <p className="field-msg error fp-flavor-error">
+            {items.some((item) => offerNeedsComponents(item.offer))
+              ? 'من فضلك اختار كل مكوّنات الباندل'
+              : 'من فضلك وزّع كل البرطمانات على النكهات'}
+          </p>
         )}
       </div>
 

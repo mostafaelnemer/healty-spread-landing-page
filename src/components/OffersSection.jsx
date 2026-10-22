@@ -157,7 +157,12 @@ export default function OffersSection({ intro, offers, offersReady, onCheckout, 
                     <s>{formatPrice(offer.originalPrice * displayQty)}</s>
                     <span className="saving-tag">وفر {formatPrice(offer.saving * displayQty)}</span>
                   </div>
-                  {offer.configuration?.type === 'bundle' ? (
+                  {offer.configuration?.type === 'components' ? (
+                    <p className="bundle-row-meta">
+                      {shippingLabel(offer, 'spread') ? `${shippingLabel(offer, 'spread')} · ` : ''}
+                      {offer.components.filter((component) => component.choose > 0).map((component) => component.label).join(' + ') || 'مكوّنات ثابتة'}
+                    </p>
+                  ) : offer.configuration?.type === 'bundle' ? (
                     <p className="bundle-row-meta">{shippingLabel(offer, 'spread') ? `${shippingLabel(offer, 'spread')} · ` : ''}⚖️ 375 جرام لكل برطمان · 🥤 350 مل لكل زجاجة كولا</p>
                   ) : offer.configuration?.type === 'chocoBar' ? (
                     <p className="bundle-row-meta">{shippingLabel(offer, 'spread') ? `${shippingLabel(offer, 'spread')} · ` : ''}⚖️ 40 جرام للقطعة</p>

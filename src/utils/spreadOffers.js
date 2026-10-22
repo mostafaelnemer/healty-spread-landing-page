@@ -1,14 +1,16 @@
 // The mixed offer has two independent distributions. Its composition remains
 // local until the dashboard supports a separate count for each product type.
 export function mapSpreadOffer(bundle, local, { spreadFlavors = [], chocoBarFlavors = [] } = {}) {
-  const type = local?.configuration?.type;
+  const components = Array.isArray(bundle.components) && bundle.components.length ? bundle.components : null;
+  const type = components ? 'components' : local?.configuration?.type;
   const units = Math.max(1, Number(bundle.units) || 1);
-  let configuration = local?.configuration;
+  let configuration = components ? { type: 'components' } : local?.configuration;
   if (type === 'chocoBar') configuration = { ...configuration, total: units };
 
   return {
     ...local,
     ...bundle,
+    components,
     spreadFlavors: (bundle.flavorOptions || []).filter(f => f.group === 'spread').map(f => {
       const original = spreadFlavors.find(local => local.id === f.id);
       return { ...original, ...f, image: f.image || original?.image, shortLabel: f.name, label: f.name };

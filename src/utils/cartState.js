@@ -50,8 +50,13 @@ export function offerNeedsFlavors(offer) {
     offer?.configuration?.type === 'flavors' ||
     (Number.isFinite(offer?.unitsPerPack) && offer.unitsPerPack > 0 &&
       offer?.configuration?.type !== 'chocoBar' &&
+      offer?.configuration?.type !== 'components' &&
       offer?.configuration?.type !== 'spreadAndChocoBar')
   );
+}
+
+export function offerNeedsComponents(offer) {
+  return offer?.configuration?.type === 'components' && Array.isArray(offer?.components) && offer.components.length > 0;
 }
 
 export function offerNeedsBundleConfig(offer) {
@@ -79,6 +84,9 @@ export function bundleColaUnitsPerShrink(offer) {
 }
 
 export function spreadDistributionTotal(item) {
+  if (offerNeedsComponents(item.offer)) {
+    return offerPackUnits(item.offer) * item.qty;
+  }
   if (offerNeedsBundleConfig(item.offer)) {
     return bundleSpreadUnits(item.offer) * item.qty;
   }

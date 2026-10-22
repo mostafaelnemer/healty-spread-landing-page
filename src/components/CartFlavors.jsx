@@ -4,12 +4,14 @@ import {
   offerNeedsBundleConfig,
   offerNeedsChocoBarConfig,
   offerNeedsSpreadAndChocoBarConfig,
+  offerNeedsComponents,
   spreadDistributionTotal,
   colaDistributionTotal,
 } from '../utils/cartState.js';
 import FlavorPicker from './FlavorPicker.jsx';
 import ColaFlavorDist, { defaultColaFlavors } from './ColaFlavorDist.jsx';
 import ChocoBarPicker, { emptyChocoBarFlavors } from './ChocoBarPicker.jsx';
+import BundleComponents from './BundleComponents.jsx';
 
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
 const toArabic = (n) => n.toString().replace(/\d/g, (d) => ARABIC_DIGITS[d]);
@@ -83,10 +85,13 @@ export default function CartFlavors({
   onItemColaChange,
   itemChocoBar,
   onItemChocoBarChange,
+  itemComponents,
+  onItemComponentsChange,
 }) {
   if (items.length === 0) return null;
 
   const needsConfig = (item) =>
+    offerNeedsComponents(item.offer) ||
     offerNeedsFlavors(item.offer) ||
     offerNeedsColaConfig(item.offer) ||
     offerNeedsBundleConfig(item.offer) ||
@@ -105,6 +110,27 @@ export default function CartFlavors({
       </div>
 
       {items.map((item, i) => {
+        if (offerNeedsComponents(item.offer)) {
+          return (
+            <details key={`${item.offer.id}-${i}`} className="fp-cart-line fp-cart-line--bundle" open>
+              <summary className="fp-cart-line-title">
+                {item.offer.title}
+                {item.qty > 1 ? ` × ${item.qty}` : ''}
+                <span className="fp-cart-line-toggle" aria-hidden="true">▾</span>
+              </summary>
+              <div className="fp-cart-line-body">
+                <BundleComponents
+                  components={item.offer.components}
+                  values={itemComponents?.[i] ?? {}}
+                  onChange={(value) =>
+                    onItemComponentsChange((prev) => prev.map((x, idx) => (idx === i ? value : x)))
+                  }
+                />
+              </div>
+            </details>
+          );
+        }
+
         if (offerNeedsBundleConfig(item.offer)) {
           return (
             <BundleConfig
