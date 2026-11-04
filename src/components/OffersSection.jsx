@@ -21,6 +21,9 @@ export default function OffersSection({ intro, offers, offersReady, onCheckout, 
   const checkoutGuardRef = useRef(false);
 
   const availableOffers = offers.filter(o => o.flavorsAvailable !== false);
+  // نص بانر الشيكولاتة يتبني من أسعار العروض نفسها — عشان ما يتعارضش مع كروت العروض
+  const chocoBarOffer = offers.find((o) => o.configuration?.type === 'chocoBar');
+  const spreadChocoOffer = offers.find((o) => o.configuration?.type === 'spreadAndChocoBar');
   const cartCount = availableOffers.reduce((sum, offer) => sum + (cart[offer.id] || 0), 0);
   const subtotal = getCartSubtotal(cart, availableOffers);
   const checkoutItems = cartToCheckoutItems(cart, availableOffers);
@@ -95,9 +98,13 @@ export default function OffersSection({ intro, offers, offersReady, onCheckout, 
           <CountdownTimer />
         </div>
 
-        {offers.some(offer => ['chocoBar', 'spreadAndChocoBar'].includes(offer.configuration?.type)) && <a href="#choco-offers" className="choco-teaser-banner">
+        {(chocoBarOffer || spreadChocoOffer) && <a href="#choco-offers" className="choco-teaser-banner">
           <span className="choco-teaser-new">جديد 🆕</span>
-          <span className="choco-teaser-text">🍫 شيكولاتة بار 40 جرام — اشتري 4 واحصل على الخامسة هدية · سبريد + بار ب 599 بدل 710 جنيه</span>
+          <span className="choco-teaser-text">
+            {chocoBarOffer
+              ? `🍫 شيكولاتة بار 40 جرام — اشتري 4 واحصل على الخامسة مجاناً بـ ${formatPrice(chocoBarOffer.price)} بدلاً من ${formatPrice(chocoBarOffer.originalPrice)}`
+              : `🍫 سبريد + شيكولاتة بار — بـ ${formatPrice(spreadChocoOffer.price)} بدلاً من ${formatPrice(spreadChocoOffer.originalPrice)}`}
+          </span>
           <span className="choco-teaser-arrow">↓</span>
         </a>}
 
