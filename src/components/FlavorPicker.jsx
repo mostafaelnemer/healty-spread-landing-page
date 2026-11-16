@@ -18,6 +18,7 @@ export default function FlavorPicker({
   flavors,
   onChange,
   options = spreadFlavors.filter(f => !f.hidden), embedded = false,
+  unit = 'برطمان',
 }) {
   const qtys = flavors ?? emptyFlavors();
   const used = options.reduce((s, f) => s + (qtys[f.id] ?? 0), 0);
@@ -47,7 +48,7 @@ export default function FlavorPicker({
   const body = (
     <>
       <div className={`fp-remaining-chip${isDone ? ' fp-remaining-chip--done' : ''}`}>
-        {isDone ? `تم التوزيع ✓  ${summary}` : `باقي ${toArabic(remaining)} برطمان للتوزيع`}
+        {isDone ? `تم التوزيع ✓  ${summary}` : `باقي ${toArabic(remaining)} ${unit} للتوزيع`}
       </div>
 
       {options.length === 0 && <p role="status">النكهات غير متاحة حاليًا — اختار عرض تاني.</p>}
@@ -117,7 +118,7 @@ export default function FlavorPicker({
           <p className="fp-step-sub">
             {maxFlavors < 4
               ? `لغاية ${toArabic(maxFlavors)} نكهات مختلفة — المجموع ${toArabic(total)}`
-              : `وزّع الـ ${toArabic(total)} برطمان على النكهات اللي تحبها`}
+              : `وزّع الـ ${toArabic(total)} ${unit} على النكهات اللي تحبها`}
           </p>
         </div>
       </div>

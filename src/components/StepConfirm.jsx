@@ -502,7 +502,7 @@ export default function StepConfirm({ form, cartItems: initialItems, onBack, onS
           <p className="field-msg error fp-flavor-error">
             {items.some((item) => offerNeedsComponents(item.offer))
               ? 'من فضلك اختار كل مكوّنات الباندل'
-              : 'من فضلك وزّع كل البرطمانات على النكهات'}
+              : 'من فضلك وزّع كل القطع على النكهات'}
           </p>
         )}
       </div>

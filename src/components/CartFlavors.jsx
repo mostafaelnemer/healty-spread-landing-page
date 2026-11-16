@@ -44,6 +44,7 @@ function BundleConfig({
           </div>
           <FlavorPicker
             options={item.offer.spreadFlavors}
+            unit={item.offer.unitLabel}
             embedded
             total={spreadTotal}
             maxFlavors={item.offer.configuration?.spread?.maxFlavors ?? 9}
@@ -105,7 +106,7 @@ export default function CartFlavors({
         <span className="fp-step-num" aria-hidden="true">🍫</span>
         <div>
           <p className="fp-step-title">اختار النكهات والكميات</p>
-          <p className="fp-step-sub">وزّع البرطمانات والزجاجات لكل عرض في سلتك</p>
+          <p className="fp-step-sub">وزّع القطع على النكهات لكل عرض في سلتك</p>
         </div>
       </div>
 
@@ -156,6 +157,7 @@ export default function CartFlavors({
               <div className="fp-cart-line-body">
                 <FlavorPicker
             options={item.offer.spreadFlavors}
+            unit={item.offer.unitLabel}
                   embedded
                   total={spreadDistributionTotal(item)}
                   maxFlavors={item.offer.maxFlavors ?? 4}
@@ -234,6 +236,7 @@ export default function CartFlavors({
                   </div>
                   <FlavorPicker
             options={item.offer.spreadFlavors}
+            unit={item.offer.unitLabel}
                     embedded
                     total={spreadTotal}
                     maxFlavors={item.offer.maxFlavors ?? 9}

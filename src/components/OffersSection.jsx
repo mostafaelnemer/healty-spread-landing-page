@@ -170,13 +170,9 @@ export default function OffersSection({ intro, offers, offersReady, onCheckout, 
                       {offer.components.filter((component) => component.choose > 0).map((component) => component.label).join(' + ') || 'مكوّنات ثابتة'}
                     </p>
                   ) : offer.configuration?.type === 'bundle' ? (
-                    <p className="bundle-row-meta">{shippingLabel(offer, 'spread') ? `${shippingLabel(offer, 'spread')} · ` : ''}⚖️ 375 جرام لكل برطمان · 🥤 350 مل لكل زجاجة كولا</p>
-                  ) : offer.configuration?.type === 'chocoBar' ? (
-                    <p className="bundle-row-meta">{shippingLabel(offer, 'spread') ? `${shippingLabel(offer, 'spread')} · ` : ''}⚖️ 40 جرام للقطعة</p>
-                  ) : offer.configuration?.type === 'spreadAndChocoBar' ? (
-                    <p className="bundle-row-meta">{shippingLabel(offer, 'spread') ? `${shippingLabel(offer, 'spread')} · ` : ''}⚖️ 375 جرام للسبريد · ⚖️ 40 جرام للشيكولاتة بار</p>
+                    <p className="bundle-row-meta">{shippingLabel(offer, 'spread') ? `${shippingLabel(offer, 'spread')} · ` : ''}{offer.weightNote || '⚖️ 375 جرام لكل برطمان'} · 🥤 350 مل لكل زجاجة كولا</p>
                   ) : (
-                    <p className="bundle-row-meta">{shippingLabel(offer, 'spread') ? `${shippingLabel(offer, 'spread')} · ` : ''}⚖️ 375 جرام لكل برطمان</p>
+                    <p className="bundle-row-meta">{[shippingLabel(offer, 'spread'), offer.weightNote].filter(Boolean).join(' · ')}</p>
                   )}
 
                   {inCart ? (

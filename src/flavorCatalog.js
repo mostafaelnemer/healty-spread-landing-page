@@ -5,11 +5,38 @@ const catalog = {
   chocoBar: [['darkHazel', 'دارك بالبندق'], ['darkAlmond', 'دارك باللوز'], ['darkPlain', 'دارك سادة'], ['milkHazel', 'ميلك بالبندق'], ['milkAlmond', 'ميلك باللوز'], ['milkPlain', 'ميلك سادة']],
   icecream: ['فانيليا', 'شوكولاتة', 'فراولة', 'مانجو', 'بلوبيري', 'فسدق', 'بندق', 'كنتالوب'].map((name, i) => [`ice-${i}`, name]),
   ketobar: ['بندق', 'زبدة فول سوداني', 'دبل شوكولاتة', 'جوز هند', 'لوز'].map((name, i) => [`keto-${i}`, name]),
+  halawaBar: [['halawaPlain', 'سادة'], ['halawaChocolate', 'بالشيكولاتة'], ['halawaPistachio', 'بالفستق'], ['halawaHazel', 'بالبندق'], ['halawaAlmond', 'باللوز']],
+  pasta: [['pastaPenne', 'قلم'], ['pastaSpaghetti', 'اسباجتي'], ['pastaFusilli', 'لولبي']],
 }
 
-export const groupLabels = { cola: 'نكهات الكولا', spread: 'نكهات السبريد', chocoBar: 'نكهات الشيكولاتة بار', icecream: 'نكهات الآيس كريم', ketobar: 'نكهات الكيتو بار', default: 'النكهات' }
+export const groupLabels = { cola: 'نكهات الكولا', spread: 'نكهات السبريد', chocoBar: 'نكهات الشيكولاتة بار', icecream: 'نكهات الآيس كريم', ketobar: 'نكهات الكيتو بار', halawaBar: 'نكهات الحلاوة بار', pasta: 'أنواع المكرونة', default: 'النكهات' }
 
 export const catalogGroups = Object.keys(catalog)
+
+// Per product: the counting word and the default weight. A flavor can override the
+// weight (offers.flavors[].weight) from the dashboard; the landing builds the offer's
+// weight line from these, so nothing is hardcoded per product anymore.
+export const groupMeta = {
+  spread: { unit: 'برطمان', plural: 'برطمانات', weight: '375 جرام', product: 'السبريد' },
+  chocoBar: { unit: 'قطعة', plural: 'قطع', weight: '40 جرام', product: 'الشيكولاتة بار' },
+  pasta: { unit: 'كيس', plural: 'أكياس', weight: '400 جرام', product: 'المكرونة' },
+  halawaBar: { unit: 'قطعة', plural: 'قطع', weight: '', product: 'الحلاوة بار' },
+}
+export const unitFor = group => groupMeta[group]?.unit || 'قطعة'
+export const flavorWeight = flavor => String(flavor?.weight ?? '').trim() || groupMeta[flavor?.group]?.weight || ''
+
+// "⚖️ 375 جرام لكل برطمان" for one product, "⚖️ 375 جرام للسبريد · ⚖️ 40 جرام للشيكولاتة بار"
+// for mixed offers. Flavors with different weights are listed together.
+export function weightNote(options, groups) {
+  const parts = (groups || []).map(group => {
+    const weights = [...new Set((options || []).filter(f => f.group === group).map(flavorWeight).filter(Boolean))]
+    if (!weights.length) return ''
+    const meta = groupMeta[group]
+    const per = groups.length > 1 && meta?.product ? (meta.product.startsWith('ال') ? `لل${meta.product.slice(2)}` : `لـ${meta.product}`) : `لكل ${unitFor(group)}`
+    return weights.length === 1 ? `⚖️ ${weights[0]} ${per}` : `⚖️ ${weights.join(' / ')} حسب النوع`
+  }).filter(Boolean)
+  return parts.join(' · ')
+}
 
 // Bundle selection: [components] where each component has its own quantity and
 // how many flavors the customer should pick for it. Stored in offers.selection.
@@ -46,6 +73,7 @@ export function spreadOfferType(slug, raw) {
   const hasChocoBar = groups.includes('chocoBar')
   if (hasSpread && hasChocoBar) return 'mixed'
   if (hasChocoBar) return 'chocoBar'
+  if (groups.includes('pasta')) return 'pasta'
   if (hasSpread) return 'spread'
   if (slug === 'spread-choco-bar') return 'mixed'
   if (slug === 'choco-bar') return 'chocoBar'
@@ -59,15 +87,18 @@ export function flavorGroups(site, slug, selection, raw, shared = false) {
     if (groups.length) return groups
   }
   if (site === 'cola') return ['cola']
+  if (site === 'choco-bar') return ['chocoBar']
+  if (site === 'halawa-bar') return ['halawaBar']
   if (site === 'spread') {
     const type = spreadOfferType(slug, raw)
-    return type === 'mixed' ? ['spread', 'chocoBar'] : [type === 'chocoBar' ? 'chocoBar' : 'spread']
+    return type === 'mixed' ? ['spread', 'chocoBar'] : [type]
   }
   return [slug === 'icecream' || slug === 'ketobar' ? slug : 'default']
 }
 
 export function defaultFlavorsForGroup(group) {
-  return (catalog[group] || []).map(([id, name, active]) => ({ id, name, group, is_active: active !== false }))
+  const weight = groupMeta[group]?.weight
+  return (catalog[group] || []).map(([id, name, active]) => ({ id, name, group, is_active: active !== false, ...(weight ? { weight } : {}) }))
 }
 
 export function defaultFlavors(site, slug, selection, raw, shared = false) {
