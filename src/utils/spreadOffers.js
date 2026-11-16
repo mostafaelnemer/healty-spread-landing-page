@@ -46,7 +46,7 @@ export function mapSpreadOffer(bundle, local, { spreadFlavors = [], chocoBarFlav
       return { ...original, ...f, image: f.image || original?.image, shortLabel: f.name, label: f.name, weight: flavorWeight(f) || original?.weight };
     }),
     // Weight line and counting word come from the offer's own flavors (editable per flavor).
-    weightNote: weightNote(options, groups),
+    weightNote: String(bundle.weightLabel || '').trim() || weightNote(options, groups),
     unitLabel: unitFor(groups.find(group => PIECE_GROUPS.includes(group)) || 'spread'),
     title: bundle.name,
     amount: bundle.description,
